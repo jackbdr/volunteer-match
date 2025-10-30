@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
 import { requireAuth } from '@/lib/auth';
 import { UserRole } from '@prisma/client';
+import { handleApiError } from '@/lib/api-utils';
 
 /**
  * GET /api/volunteers
@@ -30,23 +31,6 @@ export async function GET(_request: NextRequest) {
 
     return NextResponse.json(volunteers);
   } catch (error) {
-    if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    if (error instanceof Error && error.message.includes('Forbidden')) {
-      return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: 'Failed to fetch volunteers' },
-      { status: 500 }
-    );
+    return handleApiError(error, 'Failed to fetch volunteers');
   }
 }

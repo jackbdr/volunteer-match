@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
 import { getCurrentUser } from '@/lib/auth';
 import { updateVolunteerSchema } from '@/lib/validations/volunteer';
-import { z } from 'zod';
+import { handleApiError } from '@/lib/api-utils';
 
 /**
  * GET /api/volunteers/me
@@ -48,11 +48,8 @@ export async function GET(_request: NextRequest) {
     }
 
     return NextResponse.json(volunteer);
-  } catch {
-    return NextResponse.json(
-      { error: 'Failed to fetch profile' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleApiError(error, 'Failed to fetch profile');
   }
 }
 
@@ -82,16 +79,6 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json(volunteer);
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid input', details: error.issues },
-        { status: 400 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: 'Failed to update profile' },
-      { status: 500 }
-    );
+    return handleApiError(error, 'Failed to update profile');
   }
 }

@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db/prisma';
 import { requireAuth } from '@/lib/auth';
 import { updateEventSchema } from '@/lib/validations/event';
 import { UserRole } from '@prisma/client';
-import { z } from 'zod';
+import { handleApiError } from '@/lib/api-utils';
 
 /**
  * GET /api/events/[id]
@@ -45,11 +45,8 @@ export async function GET(
     }
 
     return NextResponse.json(event);
-  } catch {
-    return NextResponse.json(
-      { error: 'Failed to fetch event' },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handleApiError(error, 'Failed to fetch event');
   }
 }
 
@@ -80,31 +77,7 @@ export async function PATCH(
 
     return NextResponse.json(event);
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid input', details: error.issues },
-        { status: 400 }
-      );
-    }
-
-    if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    if (error instanceof Error && error.message.includes('Forbidden')) {
-      return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: 'Failed to update event' },
-      { status: 500 }
-    );
+    return handleApiError(error, 'Failed to update event');
   }
 }
 
@@ -126,23 +99,6 @@ export async function DELETE(
 
     return NextResponse.json({ success: true, message: 'Event deleted' });
   } catch (error) {
-    if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    if (error instanceof Error && error.message.includes('Forbidden')) {
-      return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: 'Failed to delete event' },
-      { status: 500 }
-    );
+    return handleApiError(error, 'Failed to delete event');
   }
 }

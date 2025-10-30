@@ -3,7 +3,7 @@ import { prisma } from '@/lib/db/prisma';
 import { requireAuth } from '@/lib/auth';
 import { createEventSchema } from '@/lib/validations/event';
 import { UserRole } from '@prisma/client';
-import { z } from 'zod';
+import { handleApiError } from '@/lib/api-utils';
 
 /**
  * GET /api/events
@@ -23,10 +23,7 @@ export async function GET(_request: NextRequest) {
 
     return NextResponse.json(events);
   } catch (error) {
-    return NextResponse.json(
-      { error: 'Failed to fetch events' },
-      { status: 500 }
-    );
+    return handleApiError(error, 'Failed to fetch events');
   }
 }
 
@@ -52,30 +49,6 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(event, { status: 201 });
   } catch (error) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { error: 'Invalid input', details: error.issues },
-        { status: 400 }
-      );
-    }
-
-    if (error instanceof Error && error.message === 'Unauthorized') {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-
-    if (error instanceof Error && error.message.includes('Forbidden')) {
-      return NextResponse.json(
-        { error: 'Admin access required' },
-        { status: 403 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: 'Failed to create event' },
-      { status: 500 }
-    );
+    return handleApiError(error, 'Failed to create event');
   }
 }
