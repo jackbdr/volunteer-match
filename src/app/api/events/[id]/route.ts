@@ -11,10 +11,12 @@ import { handleApiError } from '@/lib/api-utils';
  * Public access
  */
 export async function GET(
-  request: NextRequest,
-  { params }: { params: { id: string } }
+  _request: NextRequest,
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params;
+
     const event = await prisma.event.findUnique({
       where: { id: params.id },
       include: {
@@ -57,9 +59,11 @@ export async function GET(
  */
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params;
+
     await requireAuth(UserRole.ADMIN);
 
     const body = await request.json();
@@ -88,9 +92,11 @@ export async function PATCH(
  */
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const params = await context.params;
+    
     await requireAuth(UserRole.ADMIN);
 
     await prisma.event.delete({
