@@ -9,7 +9,7 @@ import { handleApiError } from '@/lib/api-utils';
  * List all volunteers
  * Admin only
  */
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
   try {
     await requireAuth(UserRole.ADMIN);
 

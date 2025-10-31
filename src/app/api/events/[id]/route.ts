@@ -4,6 +4,7 @@ import { requireAuth } from '@/lib/auth';
 import { updateEventSchema } from '@/lib/validations/event';
 import { UserRole } from '@prisma/client';
 import { handleApiError } from '@/lib/api-utils';
+import { NotFoundError } from '@/lib/errors';
 
 /**
  * GET /api/events/[id]
@@ -13,7 +14,7 @@ import { handleApiError } from '@/lib/api-utils';
 export async function GET(
   _request: NextRequest,
   context: { params: Promise<{ id: string }> }
-) {
+): Promise<NextResponse> {
   try {
     const params = await context.params;
 
@@ -40,10 +41,7 @@ export async function GET(
     });
 
     if (!event) {
-      return NextResponse.json(
-        { error: 'Event not found' },
-        { status: 404 }
-      );
+      throw new NotFoundError('Event not found');
     }
 
     return NextResponse.json(event);
@@ -60,7 +58,7 @@ export async function GET(
 export async function PATCH(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
-) {
+): Promise<NextResponse> {
   try {
     const params = await context.params;
 
@@ -93,7 +91,7 @@ export async function PATCH(
 export async function DELETE(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
-) {
+): Promise<NextResponse> {
   try {
     const params = await context.params;
     

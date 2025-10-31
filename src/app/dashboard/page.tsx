@@ -1,7 +1,8 @@
+import { JSX } from 'react';
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
 
-export default async function DashboardPage() {
+export default async function DashboardPage(): Promise<JSX.Element> {
   const user = await getCurrentUser();
 
   if (!user) {
@@ -24,12 +25,14 @@ export default async function DashboardPage() {
                 {user.role}
               </span>
               
-              <a
-                href="/api/auth/signout"
-                className="text-sm text-gray-700 hover:text-gray-900 underline"
-              >
-                Sign out
-              </a>
+              <form action="/api/auth/signout" method="post" className="inline">
+                <button
+                  type="submit"
+                  className="text-sm text-gray-700 hover:text-gray-900 underline bg-transparent border-none cursor-pointer"
+                >
+                  Sign out
+                </button>
+              </form>
             </div>
           </div>
         </div>

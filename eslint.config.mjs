@@ -13,6 +13,25 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  {
+    rules: {
+      '@typescript-eslint/explicit-function-return-type': 'error',
+      '@typescript-eslint/explicit-module-boundary-types': 'error',
+      '@typescript-eslint/explicit-member-accessibility': [
+        'error',
+        {
+          accessibility: 'explicit',
+          overrides: {
+            accessors: 'explicit',
+            constructors: 'explicit',
+            methods: 'explicit',
+            properties: 'explicit',
+            parameterProperties: 'explicit'
+        }
+      }
+      ]
+    }
+  }
 ]);
 
 export default eslintConfig;

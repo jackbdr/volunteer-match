@@ -10,7 +10,7 @@ import { handleApiError } from '@/lib/api-utils';
  * List all events
  * Public access
  */
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
   try {
     const events = await prisma.event.findMany({
       orderBy: { startTime: 'asc' },
@@ -32,7 +32,7 @@ export async function GET() {
  * Create a new event
  * Admin only
  */
-export async function POST(request: NextRequest) {
+export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
     await requireAuth(UserRole.ADMIN);
 

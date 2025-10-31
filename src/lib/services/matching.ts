@@ -1,16 +1,8 @@
 import { prisma } from '@/lib/db/prisma';
+import { NotFoundError } from '@/lib/errors';
 import { Event, Volunteer, EventType } from '@prisma/client';
+import type { MatchScore, EventMatch, VolunteerMatch, MatchingResult } from '@/lib/types/matching';
 
-export interface MatchScore {
-  volunteerId: string;
-  eventId: string;
-  score: number;
-  breakdown: {
-    skillsScore: number;
-    availabilityScore: number;
-    locationScore: number;
-  };
-}
 
 export class MatchingService {
   /**
@@ -23,7 +15,7 @@ export class MatchingService {
    * 
    * Total: 0-100 points
    */
-  calculateMatchScore(volunteer: Volunteer, event: Event): MatchScore {
+  public calculateMatchScore(volunteer: Volunteer, event: Event): MatchScore {
     let totalScore = 0;
     const breakdown = {
       skillsScore: 0,
@@ -73,13 +65,13 @@ export class MatchingService {
    * @param eventId - The event to find matches for
    * @returns Array of match scores (sorted by score descending)
    */
-  async findMatchesForEvent(eventId: string): Promise<MatchScore[]> {
+  public async findMatchesForEvent(eventId: string): Promise<MatchScore[]> {
     const event = await prisma.event.findUnique({
       where: { id: eventId },
     });
 
     if (!event) {
-      throw new Error('Event not found');
+      throw new NotFoundError('Event not found');
     }
 
     const volunteers = await prisma.volunteer.findMany();
@@ -128,7 +120,7 @@ export class MatchingService {
    * Get recommended events for a volunteer
    * Returns events with match score >= 50
    */
-  async getRecommendedEvents(volunteerId: string): Promise<Array<Event & { matchScore: number }>> {
+  public async getRecommendedEvents(volunteerId: string): Promise<EventMatch[]> {
     const matches = await prisma.eventMatch.findMany({
       where: {
         volunteerId,
@@ -153,7 +145,7 @@ export class MatchingService {
    * Get top volunteer matches for an event
    * Returns volunteers with match score >= 50
    */
-  async getTopVolunteersForEvent(eventId: string): Promise<Array<Volunteer & { matchScore: number }>> {
+  public async getTopVolunteersForEvent(eventId: string): Promise<VolunteerMatch[]> {
     const matches = await prisma.eventMatch.findMany({
       where: {
         eventId,
@@ -178,7 +170,7 @@ export class MatchingService {
    * Recalculate all matches for all upcoming events
    * Useful for batch processing or cron jobs
    */
-  async recalculateAllMatches(): Promise<{ eventsProcessed: number; matchesCreated: number }> {
+  public async recalculateAllMatches(): Promise<MatchingResult> {
     const upcomingEvents = await prisma.event.findMany({
       where: {
         startTime: {

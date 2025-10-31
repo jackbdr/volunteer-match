@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 
 const prisma = new PrismaClient();
 
-async function main() {
+async function main(): Promise<void> {
   console.log('🌱 Starting seed...');
 
   // Clear existing data (in correct order due to foreign key constraints)
