@@ -9,7 +9,7 @@ import { handleApiError } from '@/lib/api-utils';
  * Get current user's volunteer profile
  * Authenticated volunteers only
  */
-export async function GET(_request: NextRequest) {
+export async function GET() {
   try {
     const user = await getCurrentUser();
     
@@ -35,7 +35,7 @@ export async function GET(_request: NextRequest) {
             event: true,
           },
           orderBy: { score: 'desc' },
-          take: 10, // Latest 10 matches
+          take: 10,
         },
       },
     });

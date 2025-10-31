@@ -10,7 +10,7 @@ import { handleApiError } from '@/lib/api-utils';
  * List all events
  * Public access
  */
-export async function GET(_request: NextRequest) {
+export async function GET() {
   try {
     const events = await prisma.event.findMany({
       orderBy: { startTime: 'asc' },

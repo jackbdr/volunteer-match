@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/db/prisma';
 import { requireAuth } from '@/lib/auth';
 import { UserRole } from '@prisma/client';
@@ -9,7 +9,7 @@ import { handleApiError } from '@/lib/api-utils';
  * List all volunteers
  * Admin only
  */
-export async function GET(_request: NextRequest) {
+export async function GET() {
   try {
     await requireAuth(UserRole.ADMIN);
 
