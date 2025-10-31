@@ -3,13 +3,14 @@ import { prisma } from '@/lib/db/prisma';
 import { getCurrentUser } from '@/lib/auth';
 import { updateVolunteerSchema } from '@/lib/validations/volunteer';
 import { handleApiError } from '@/lib/api-utils';
+import { UnauthorizedError, NotFoundError } from '@/lib/errors';
 
 /**
  * GET /api/volunteers/me
  * Get current user's volunteer profile
  * Authenticated volunteers only
  */
-export async function GET() {
+export async function GET(): Promise<NextResponse> {
   try {
     const user = await getCurrentUser();
     
@@ -41,10 +42,7 @@ export async function GET() {
     });
 
     if (!volunteer) {
-      return NextResponse.json(
-        { error: 'Volunteer profile not found' },
-        { status: 404 }
-      );
+      throw new NotFoundError('Volunteer profile not found');
     }
 
     return NextResponse.json(volunteer);
@@ -58,15 +56,12 @@ export async function GET() {
  * Update current user's volunteer profile
  * Authenticated volunteers only
  */
-export async function PATCH(request: NextRequest) {
+export async function PATCH(request: NextRequest): Promise<NextResponse> {
   try {
     const user = await getCurrentUser();
     
     if (!user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
+      throw new UnauthorizedError();
     }
 
     const body = await request.json();
