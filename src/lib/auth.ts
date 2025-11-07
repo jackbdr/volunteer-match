@@ -1,5 +1,5 @@
 import { getServerSession } from 'next-auth/next';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth-config';
 import { UserRole } from '@prisma/client';
 import { UnauthorizedError, ForbiddenError } from './errors';
 import type { AuthUser } from './types/auth';
