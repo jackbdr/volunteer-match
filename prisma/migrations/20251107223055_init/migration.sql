@@ -88,6 +88,9 @@ CREATE TABLE "Event" (
     "duration" INTEGER NOT NULL,
     "meetingUrl" TEXT,
     "zoomMeetingId" TEXT,
+    "isActive" BOOLEAN NOT NULL DEFAULT true,
+    "registrationDeadline" TIMESTAMP(3),
+    "maxVolunteers" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" TIMESTAMP(3) NOT NULL,
 

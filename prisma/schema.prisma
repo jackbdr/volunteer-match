@@ -110,6 +110,10 @@ model Event {
   meetingUrl    String?
   zoomMeetingId String?
   
+  isActive              Boolean   @default(true)
+  registrationDeadline  DateTime?
+  maxVolunteers         Int?
+  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

@@ -140,7 +140,10 @@ async function main(): Promise<void> {
       timeSlot: 'saturday_morning',
       location: 'Online',
       startTime: new Date('2025-11-15T10:00:00Z'),
-      duration: 120, // 2 hours
+      duration: 120,
+      isActive: true,
+      registrationDeadline: new Date('2025-11-13T23:59:59Z'),
+      maxVolunteers: 6,
     },
   });
 
@@ -155,7 +158,10 @@ async function main(): Promise<void> {
       timeSlot: 'saturday_afternoon',
       location: 'Brighton',
       startTime: new Date('2025-11-16T14:00:00Z'),
-      duration: 180, // 3 hours
+      duration: 180,
+      isActive: true,
+      registrationDeadline: new Date('2025-11-15T12:00:00Z'),
+      maxVolunteers: 25,
     },
   });
 
@@ -170,7 +176,10 @@ async function main(): Promise<void> {
       timeSlot: 'sunday_afternoon',
       location: 'London',
       startTime: new Date('2025-11-17T14:00:00Z'),
-      duration: 240, // 4 hours
+      duration: 240,
+      isActive: false,
+      registrationDeadline: new Date('2025-11-16T18:00:00Z'),
+      maxVolunteers: 12,
     },
   });
 
@@ -185,7 +194,10 @@ async function main(): Promise<void> {
       timeSlot: 'saturday_morning',
       location: 'London',
       startTime: new Date('2025-11-15T09:00:00Z'),
-      duration: 180, // 3 hours
+      duration: 180,
+      isActive: true,
+      registrationDeadline: null,
+      maxVolunteers: null,
     },
   });
 
@@ -200,7 +212,10 @@ async function main(): Promise<void> {
       timeSlot: 'sunday_morning',
       location: 'Online',
       startTime: new Date('2025-11-17T10:00:00Z'),
-      duration: 90, // 1.5 hours
+      duration: 90,
+      isActive: true,
+      registrationDeadline: new Date('2025-11-16T20:00:00Z'),
+      maxVolunteers: 4,
     },
   });
 
