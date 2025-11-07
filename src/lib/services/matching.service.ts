@@ -1,0 +1,126 @@
+import { EventMatch, MatchStatus } from '@prisma/client';
+import { EventMatchRepository, CreateEventMatchData, EventMatchWithRelations } from '@/lib/repositories/event-match.repository';
+import { EventRepository } from '@/lib/repositories/event.repository';
+import { VolunteerRepository } from '@/lib/repositories/volunteer.repository';
+import { ValidationError, ForbiddenError } from '@/lib/errors';
+import type { AuthUser } from '@/lib/types/auth';
+
+export class MatchingService {
+  private eventMatchRepository: EventMatchRepository;
+  private eventRepository: EventRepository;
+  private volunteerRepository: VolunteerRepository;
+
+  public constructor(
+    eventMatchRepository: EventMatchRepository = new EventMatchRepository(),
+    eventRepository: EventRepository = new EventRepository(),
+    volunteerRepository: VolunteerRepository = new VolunteerRepository()
+  ) {
+    this.eventMatchRepository = eventMatchRepository;
+    this.eventRepository = eventRepository;
+    this.volunteerRepository = volunteerRepository;
+  }
+
+
+  /**
+   * Get all matches for a volunteer
+   */
+  public async getVolunteerMatches(volunteerId: string, user: AuthUser): Promise<EventMatchWithRelations[]> {
+    const volunteer = await this.volunteerRepository.findById(volunteerId);
+
+    if (user.role !== 'ADMIN' && volunteer.userId !== user.id) {
+      throw new ForbiddenError('You can only view your own matches');
+    }
+
+    return this.eventMatchRepository.findByVolunteerId(volunteerId);
+  }
+
+  /**
+   * Create a new match between volunteer and event
+   */
+  public async createMatch(
+    eventId: string,
+    volunteerId: string,
+    user: AuthUser,
+    matchData?: {
+      score?: number;
+    }
+  ): Promise<EventMatch> {
+    const event = await this.eventRepository.findById(eventId);
+    const _volunteer = await this.volunteerRepository.findById(volunteerId);
+
+    const existingMatch = await this.eventMatchRepository.findByEventAndVolunteer(eventId, volunteerId);
+    if (existingMatch) {
+      throw new ValidationError('Match between this volunteer and event already exists');
+    }
+
+    if (!event.isActive) {
+      throw new ValidationError('Cannot create match for inactive event');
+    }
+
+    if (event.startTime <= new Date()) {
+      throw new ValidationError('Cannot create match for past event');
+    }
+
+    const createData: CreateEventMatchData = {
+      eventId,
+      volunteerId,
+      status: MatchStatus.PENDING,
+      score: matchData?.score || 0,
+      notified: false,
+    };
+
+    return this.eventMatchRepository.create(createData);
+  }
+
+
+  /**
+   * Calculate match score between volunteer and event
+   */
+  private calculateMatchScore(volunteerSkills: string[], eventSkills: string[]): number {
+    if (!volunteerSkills.length || !eventSkills.length) {
+      return 0;
+    }
+
+    const matchingSkills = volunteerSkills.filter(skill => 
+      eventSkills.includes(skill)
+    );
+
+    return (matchingSkills.length / eventSkills.length) * 100;
+  }
+
+  /**
+   * Get recommended events for a volunteer
+   */
+  public async getRecommendedEvents(volunteerId: string, user: AuthUser): Promise<unknown[]> {
+    const volunteer = await this.volunteerRepository.findById(volunteerId);
+
+    if (user.role !== 'ADMIN' && volunteer.userId !== user.id) {
+      throw new ForbiddenError('You can only get recommendations for yourself');
+    }
+
+    const events = await this.eventRepository.findBySkills(volunteer.skills);
+
+    return events.map(event => ({
+      event,
+      matchScore: this.calculateMatchScore(volunteer.skills, event.requiredSkills),
+    })).filter(rec => rec.matchScore > 0)
+      .sort((a, b) => b.matchScore - a.matchScore);
+  }
+
+  /**
+   * Get recommended volunteers for an event
+   */
+  public async getRecommendedVolunteers(eventId: string, _user: AuthUser): Promise<unknown[]> {
+    const event = await this.eventRepository.findById(eventId);
+    
+    const volunteers = await this.volunteerRepository.findBySkills(event.requiredSkills);
+
+    return volunteers.map(volunteer => ({
+      volunteer,
+      matchScore: this.calculateMatchScore(volunteer.skills, event.requiredSkills),
+    })).filter(rec => rec.matchScore > 0)
+      .sort((a, b) => b.matchScore - a.matchScore);
+  }
+}
+
+export const matchingService = new MatchingService();
