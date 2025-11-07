@@ -5,9 +5,7 @@ import nextTs from "eslint-config-next/typescript";
 const eslintConfig = defineConfig([
   ...nextVitals,
   ...nextTs,
-  // Override default ignores of eslint-config-next.
   globalIgnores([
-    // Default ignores of eslint-config-next:
     ".next/**",
     "out/**",
     "build/**",
@@ -29,6 +27,31 @@ const eslintConfig = defineConfig([
             parameterProperties: 'explicit'
         }
       }
+      ],
+      
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+          destructuredArrayIgnorePattern: '^_',
+          ignoreRestSiblings: true
+        }
+      ],
+      'no-unused-vars': 'off',
+      
+      'no-unreachable': 'error',
+      'no-unused-expressions': 'error',
+      'no-unused-labels': 'error',
+      
+      'no-duplicate-imports': 'error',
+      
+      '@typescript-eslint/no-empty-interface': [
+        'error',
+        {
+          allowSingleExtends: false
+        }
       ]
     }
   }
