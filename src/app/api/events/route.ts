@@ -1,54 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { prisma } from '@/lib/db/prisma';
-import { requireAuth } from '@/lib/auth';
-import { createEventSchema } from '@/lib/validations/event';
+import { withOptionalAuth, withAuth } from '@/lib/middleware/auth-handler';
+import { eventService } from '@/lib/services/event.service';
+import { EventRepository } from '@/lib/repositories/event.repository';
+import { parseEventFilters } from '@/lib/utils/query-params';
 import { UserRole } from '@prisma/client';
-import { handleApiError } from '@/lib/api-utils';
+
+const eventRepository = new EventRepository();
 
 /**
  * GET /api/events
- * List all events
- * Public access
+ * List all events with optional filtering
+ * Public access (but authenticated users see inactive events too)
  */
-export async function GET(): Promise<NextResponse> {
-  try {
-    const events = await prisma.event.findMany({
-      orderBy: { startTime: 'asc' },
-      include: {
-        _count: {
-          select: { matches: true },
-        },
-      },
-    });
+export const GET = withOptionalAuth(async (user, request: NextRequest) => {
+  const { searchParams } = new URL(request.url);
+  const filters = parseEventFilters(searchParams);
+  const events = await eventRepository.findAll(filters);
 
-    return NextResponse.json(events);
-  } catch (error) {
-    return handleApiError(error, 'Failed to fetch events');
-  }
-}
+  return NextResponse.json(events, { status: 200 });
+});
 
 /**
  * POST /api/events
  * Create a new event
  * Admin only
  */
-export async function POST(request: NextRequest): Promise<NextResponse> {
-  try {
-    await requireAuth(UserRole.ADMIN);
-
-    const body = await request.json();
-    
-    const validated = createEventSchema.parse(body);
-
-    const event = await prisma.event.create({
-      data: {
-        ...validated,
-        startTime: new Date(validated.startTime),
-      },
-    });
-
-    return NextResponse.json(event, { status: 201 });
-  } catch (error) {
-    return handleApiError(error, 'Failed to create event');
-  }
-}
+export const POST = withAuth(async (user, request: NextRequest) => {
+  const data = await request.json();
+  const event = await eventService.createEvent(user, data);
+  return NextResponse.json(event, { status: 201 });
+}, UserRole.ADMIN);

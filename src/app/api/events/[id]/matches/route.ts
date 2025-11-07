@@ -1,33 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { requireAuth } from '@/lib/auth';
-import { MatchingService } from '@/lib/services/matching';
+import { withAuth } from '@/lib/middleware/auth-handler';
+import { matchingService } from '@/lib/services/matching.service';
+import { EventMatchRepository } from '@/lib/repositories/event-match.repository';
 import { UserRole } from '@prisma/client';
-import { handleApiError } from '@/lib/api-utils';
+
+const eventMatchRepository = new EventMatchRepository();
+
+/**
+ * GET /api/events/[id]/matches
+ * Get all matches for a specific event
+ * Admin only
+ */
+export const GET = withAuth(async (user, request: NextRequest, context: { params: Promise<{ id: string }> }) => {
+  const params = await context.params;
+  const matches = await eventMatchRepository.findByEventId(params.id);
+  
+  return NextResponse.json(matches, { status: 200 });
+}, UserRole.ADMIN);
 
 /**
  * POST /api/events/[id]/matches
- * Calculate and store matches for a specific event
+ * Get recommended volunteers for a specific event
  * Admin only
  */
-export async function POST(
-  _request: NextRequest,
-  context: { params: Promise<{ id: string }> }
-): Promise<NextResponse> {
-  try {
-    const params = await context.params;
+export const POST = withAuth(async (user, request: NextRequest, context: { params: Promise<{ id: string }> }) => {
+  const params = await context.params;
+  const recommendations = await matchingService.getRecommendedVolunteers(params.id, user);
 
-    await requireAuth(UserRole.ADMIN);
-
-    const matchingService = new MatchingService();
-    const matches = await matchingService.findMatchesForEvent(params.id);
-
-    return NextResponse.json({
-      success: true,
-      eventId: params.id,
-      matchCount: matches.length,
-      topMatches: matches.slice(0, 5),
-    });
-  } catch (error) {
-    return handleApiError(error, 'Failed to calculate matches');
-  }
-}
+  return NextResponse.json({
+    success: true,
+    eventId: params.id,
+    recommendationCount: recommendations.length,
+    recommendations: recommendations.slice(0, 10),
+  }, { status: 200 });
+}, UserRole.ADMIN);
