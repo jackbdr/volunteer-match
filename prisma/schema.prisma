@@ -32,17 +32,12 @@ model User {
   password      String?   
   role          UserRole  @default(VOLUNTEER)
   
-  zoomAccessToken  String?
-  zoomRefreshToken String?
-  zoomTokenExpiry  DateTime?
-  
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
   accounts  Account[]
   sessions  Session[]
   volunteer Volunteer?
-  zoomUser  ZoomUser?
 }
 
 model Account {
@@ -119,25 +114,6 @@ model Event {
   updatedAt DateTime @updatedAt
 
   matches EventMatch[]
-}
-
-model ZoomUser {
-  id              String    @id @default(cuid())
-  userId          String    @unique
-  zoomUserId      String    @unique  // Zoom's unique user ID
-  zoomEmail       String               // Email used for Zoom account
-  accessToken     String?              // Current access token
-  refreshToken    String?              // Refresh token  
-  tokenExpiry     DateTime?            // When token expires
-  isConnected     Boolean   @default(true)
-  
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-
-  @@index([zoomUserId])
-  @@index([userId])
 }
 
 model EventMatch {
