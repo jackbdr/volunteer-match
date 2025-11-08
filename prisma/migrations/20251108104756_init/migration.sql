@@ -87,7 +87,7 @@ CREATE TABLE "Event" (
     "startTime" TIMESTAMP(3) NOT NULL,
     "duration" INTEGER NOT NULL,
     "meetingUrl" TEXT,
-    "zoomMeetingId" TEXT,
+    "zoomMeetingId" BIGINT,
     "isActive" BOOLEAN NOT NULL DEFAULT true,
     "registrationDeadline" TIMESTAMP(3),
     "maxVolunteers" INTEGER,
@@ -95,6 +95,22 @@ CREATE TABLE "Event" (
     "updatedAt" TIMESTAMP(3) NOT NULL,
 
     CONSTRAINT "Event_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "ZoomUser" (
+    "id" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "zoomUserId" TEXT NOT NULL,
+    "zoomEmail" TEXT NOT NULL,
+    "accessToken" TEXT,
+    "refreshToken" TEXT,
+    "tokenExpiry" TIMESTAMP(3),
+    "isConnected" BOOLEAN NOT NULL DEFAULT true,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+
+    CONSTRAINT "ZoomUser_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -129,6 +145,18 @@ CREATE UNIQUE INDEX "VerificationToken_identifier_token_key" ON "VerificationTok
 CREATE UNIQUE INDEX "Volunteer_userId_key" ON "Volunteer"("userId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "ZoomUser_userId_key" ON "ZoomUser"("userId");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "ZoomUser_zoomUserId_key" ON "ZoomUser"("zoomUserId");
+
+-- CreateIndex
+CREATE INDEX "ZoomUser_zoomUserId_idx" ON "ZoomUser"("zoomUserId");
+
+-- CreateIndex
+CREATE INDEX "ZoomUser_userId_idx" ON "ZoomUser"("userId");
+
+-- CreateIndex
 CREATE INDEX "EventMatch_eventId_score_idx" ON "EventMatch"("eventId", "score");
 
 -- CreateIndex
@@ -145,6 +173,9 @@ ALTER TABLE "Session" ADD CONSTRAINT "Session_userId_fkey" FOREIGN KEY ("userId"
 
 -- AddForeignKey
 ALTER TABLE "Volunteer" ADD CONSTRAINT "Volunteer_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "ZoomUser" ADD CONSTRAINT "ZoomUser_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "EventMatch" ADD CONSTRAINT "EventMatch_eventId_fkey" FOREIGN KEY ("eventId") REFERENCES "Event"("id") ON DELETE CASCADE ON UPDATE CASCADE;
