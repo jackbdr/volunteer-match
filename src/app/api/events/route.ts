@@ -3,6 +3,7 @@ import { withOptionalAuth, withAuth } from '@/lib/middleware/auth-handler';
 import { eventService } from '@/lib/services/event.service';
 import { EventRepository } from '@/lib/repositories/event.repository';
 import { parseEventFilters } from '@/lib/utils/query-params';
+import { serializeEvents, serializeEvent } from '@/lib/utils/serialization';
 import { UserRole } from '@prisma/client';
 
 const eventRepository = new EventRepository();
@@ -17,7 +18,7 @@ export const GET = withOptionalAuth(async (user, request: NextRequest) => {
   const filters = parseEventFilters(searchParams);
   const events = await eventRepository.findAll(filters);
 
-  return NextResponse.json(events, { status: 200 });
+  return NextResponse.json(serializeEvents(events), { status: 200 });
 });
 
 /**
@@ -28,5 +29,6 @@ export const GET = withOptionalAuth(async (user, request: NextRequest) => {
 export const POST = withAuth(async (user, request: NextRequest) => {
   const data = await request.json();
   const event = await eventService.createEvent(user, data);
-  return NextResponse.json(event, { status: 201 });
+  
+  return NextResponse.json(serializeEvent(event), { status: 201 });
 }, UserRole.ADMIN);

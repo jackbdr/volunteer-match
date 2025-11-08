@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withOptionalAuth, withAuth } from '@/lib/middleware/auth-handler';
 import { eventService } from '@/lib/services/event.service';
 import { EventRepository } from '@/lib/repositories/event.repository';
+import { serializeEvent } from '@/lib/utils/serialization';
 import { UserRole } from '@prisma/client';
 
 const eventRepository = new EventRepository();
@@ -15,7 +16,7 @@ export const GET = withOptionalAuth(async (user, request: NextRequest, context: 
   const params = await context.params;
   const event = await eventRepository.findById(params.id);
   
-  return NextResponse.json(event, { status: 200 });
+  return NextResponse.json(serializeEvent(event), { status: 200 });
 });
 
 /**
@@ -28,7 +29,7 @@ export const PATCH = withAuth(async (user, request: NextRequest, context: { para
   const data = await request.json();
   const event = await eventService.updateEvent(params.id, user, data);
 
-  return NextResponse.json(event, { status: 200 });
+  return NextResponse.json(serializeEvent(event), { status: 200 });
 }, UserRole.ADMIN);
 
 /**
