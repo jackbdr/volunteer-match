@@ -1,27 +1,78 @@
+'use client';
+
 import { User } from '@prisma/client';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 interface AdminDashboardProps {
   user: User;
 }
 
-// These would come from API calls in a real implementation
-const mockStats = {
-  totalEvents: 12,
-  activeEvents: 8,
-  totalVolunteers: 45,
-  recentMatches: 23,
-  zoomIntegrationStatus: 'connected'
-};
-
-const recentActivity = [
-  { id: 1, action: 'New volunteer registered', user: 'Sarah Johnson', time: '2 hours ago', type: 'volunteer' },
-  { id: 2, action: 'Event "Community Cleanup" created', user: 'Admin', time: '4 hours ago', type: 'event' },
-  { id: 3, action: 'Matches calculated for "Food Drive"', user: 'System', time: '6 hours ago', type: 'match' },
-  { id: 4, action: 'Volunteer applied to "Tutoring Program"', user: 'Mike Chen', time: '1 day ago', type: 'application' },
-];
+interface DashboardStats {
+  totalEvents: number;
+  activeEvents: number;
+  totalVolunteers: number;
+  recentMatches: number;
+}
 
 export default function AdminDashboard({ user }: AdminDashboardProps) {
+  const [stats, setStats] = useState<DashboardStats>({
+    totalEvents: 0,
+    activeEvents: 0,
+    totalVolunteers: 0,
+    recentMatches: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      const [eventsRes, volunteersRes, matchesRes] = await Promise.all([
+        fetch('/api/events'),
+        fetch('/api/volunteers'),
+        fetch('/api/matches'),
+      ]);
+
+      let totalEvents = 0;
+      let activeEvents = 0;
+      let totalVolunteers = 0;
+      let recentMatches = 0;
+
+      if (eventsRes.ok) {
+        const events = await eventsRes.json();
+        const activeEventsData = events.filter((e: any) => e.isActive);
+        totalEvents = events.length;
+        activeEvents = activeEventsData.length;
+      }
+
+      if (volunteersRes.ok) {
+        const volunteers = await volunteersRes.json();
+        totalVolunteers = volunteers.length;
+      }
+
+      if (matchesRes.ok) {
+        const matches = await matchesRes.json();
+        // Count matches created in the last 7 days
+        const oneWeekAgo = new Date();
+        oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+        recentMatches = matches.filter((m: any) => new Date(m.matchedAt) > oneWeekAgo).length;
+      }
+        
+      setStats({
+        totalEvents,
+        activeEvents,
+        totalVolunteers,
+        recentMatches,
+      });
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
@@ -40,7 +91,7 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Events</p>
-              <p className="text-2xl font-bold text-gray-900">{mockStats.totalEvents}</p>
+              <p className="text-2xl font-bold text-gray-900">{loading ? "..." : stats.totalEvents}</p>
             </div>
             <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
               <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -49,7 +100,7 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
             </div>
           </div>
           <p className="text-sm text-green-600 mt-2">
-            {mockStats.activeEvents} active events
+            {loading ? "..." : stats.activeEvents} active events
           </p>
         </div>
 
@@ -57,7 +108,7 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Volunteers</p>
-              <p className="text-2xl font-bold text-gray-900">{mockStats.totalVolunteers}</p>
+              <p className="text-2xl font-bold text-gray-900">{loading ? "..." : stats.totalVolunteers}</p>
             </div>
             <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
               <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -65,16 +116,15 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
               </svg>
             </div>
           </div>
-          <p className="text-sm text-blue-600 mt-2">
-            +3 this week
-          </p>
         </div>
 
         <div className="bg-white rounded-lg p-6 border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Recent Matches</p>
-              <p className="text-2xl font-bold text-gray-900">{mockStats.recentMatches}</p>
+              <p className="text-2xl font-bold text-gray-900">
+                {loading ? '...' : stats.recentMatches}
+              </p>
             </div>
             <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
               <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -82,9 +132,6 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
               </svg>
             </div>
           </div>
-          <p className="text-sm text-purple-600 mt-2">
-            Last calculated 2h ago
-          </p>
         </div>
 
         <div className="bg-white rounded-lg p-6 border border-gray-200">
@@ -107,46 +154,8 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Recent Activity */}
-        <div className="lg:col-span-2">
-          <div className="bg-white rounded-lg border border-gray-200">
-            <div className="p-6 border-b border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900">Recent Activity</h2>
-            </div>
-            <div className="p-6">
-              <div className="space-y-4">
-                {recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex items-start space-x-4">
-                    <div className={`w-2 h-2 rounded-full mt-2 ${
-                      activity.type === 'volunteer' ? 'bg-blue-500' :
-                      activity.type === 'event' ? 'bg-green-500' :
-                      activity.type === 'match' ? 'bg-purple-500' : 'bg-yellow-500'
-                    }`} />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-gray-900">
-                        {activity.action}
-                      </p>
-                      <p className="text-sm text-gray-500">
-                        {activity.user} • {activity.time}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-6">
-                <Link
-                  href="/dashboard/activity"
-                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                >
-                  View all activity →
-                </Link>
-              </div>
-            </div>
-          </div>
-        </div>
-
         {/* Quick Actions */}
-        <div className="space-y-6">
+        <div className="lg:col-span-2 space-y-6">
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
             <div className="space-y-3">

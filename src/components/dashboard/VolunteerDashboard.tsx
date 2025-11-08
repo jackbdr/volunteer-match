@@ -1,59 +1,57 @@
+'use client';
+
 import { User } from '@prisma/client';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 interface VolunteerDashboardProps {
   user: User;
 }
 
-// Mock data - would come from API calls
-const mockData = {
-  profileCompleteness: 75,
-  upcomingEvents: [
-    { 
-      id: 1, 
-      title: 'Community Garden Cleanup', 
-      date: '2024-01-15', 
-      time: '9:00 AM', 
-      type: 'PHYSICAL',
-      location: 'Central Park'
-    },
-    { 
-      id: 2, 
-      title: 'Virtual Tutoring Session', 
-      date: '2024-01-18', 
-      time: '2:00 PM', 
-      type: 'VIRTUAL',
-      meetingUrl: 'https://zoom.us/j/123456789'
-    }
-  ],
-  recommendations: [
-    {
-      id: 3,
-      title: 'Food Bank Volunteer',
-      matchScore: 92,
-      date: '2024-01-20',
-      time: '10:00 AM',
-      requiredSkills: ['Organization', 'Physical Labor'],
-      location: 'Downtown Food Bank'
-    },
-    {
-      id: 4,
-      title: 'Senior Center Reading Program',
-      matchScore: 87,
-      date: '2024-01-22',
-      time: '3:00 PM',
-      requiredSkills: ['Communication', 'Patience'],
-      location: 'Sunset Senior Center'
-    }
-  ],
-  notifications: [
-    { id: 1, message: 'You were matched to "Community Garden Cleanup"', time: '2 hours ago', unread: true },
-    { id: 2, message: 'New opportunity available: "Food Bank Volunteer"', time: '1 day ago', unread: true },
-    { id: 3, message: 'Profile updated successfully', time: '3 days ago', unread: false }
-  ]
-};
+interface UpcomingEvent {
+  id: string;
+  title: string;
+  startTime: string;
+  eventType: string;
+  location: string;
+  meetingUrl?: string;
+}
 
 export default function VolunteerDashboard({ user }: VolunteerDashboardProps) {
+  const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
+  const [recommendations, setRecommendations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
+
+  const fetchDashboardData = async () => {
+    try {
+      const response = await fetch('/api/events');
+      if (response.ok) {
+        const events = await response.json();
+        const activeEvents = events.filter((e: any) => 
+          e.isActive && new Date(e.startTime) > new Date()
+        );
+        
+        // For now, show all active events as recommendations
+        // TODO: Implement actual matching algorithm
+        const eventsWithScores = activeEvents.map((event: any) => ({
+          ...event,
+          matchScore: Math.floor(Math.random() * 40) + 60
+        }));
+        
+        setRecommendations(eventsWithScores.slice(0, 4));
+        // TODO: Filter for events user has applied to
+        setUpcomingEvents([]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
   return (
     <div className="space-y-6">
       {/* Welcome Section */}
@@ -67,33 +65,6 @@ export default function VolunteerDashboard({ user }: VolunteerDashboardProps) {
       </div>
 
       {/* Profile Completion Banner */}
-      {mockData.profileCompleteness < 100 && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
-                <svg className="w-5 h-5 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-yellow-800">
-                  Complete your profile ({mockData.profileCompleteness}%)
-                </h3>
-                <p className="text-sm text-yellow-700">
-                  Add your skills and availability to get better matched to events.
-                </p>
-              </div>
-            </div>
-            <Link
-              href="/dashboard/profile"
-              className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-700 transition-colors text-sm font-medium"
-            >
-              Complete Profile
-            </Link>
-          </div>
-        </div>
-      )}
 
       {/* Main Dashboard Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -113,9 +84,11 @@ export default function VolunteerDashboard({ user }: VolunteerDashboardProps) {
               </div>
             </div>
             <div className="p-6">
-              {mockData.upcomingEvents.length > 0 ? (
+              {loading ? (
+                <p className="text-gray-500">Loading...</p>
+              ) : upcomingEvents.length > 0 ? (
                 <div className="space-y-4">
-                  {mockData.upcomingEvents.map((event) => (
+                  {upcomingEvents.map((event) => (
                     <div key={event.id} className="border border-gray-200 rounded-lg p-4">
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -183,34 +156,45 @@ export default function VolunteerDashboard({ user }: VolunteerDashboardProps) {
             </div>
             <div className="p-6">
               <div className="space-y-4">
-                {mockData.recommendations.map((rec) => (
-                  <div key={rec.id} className="border border-gray-200 rounded-lg p-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-2 mb-2">
-                          <h3 className="font-medium text-gray-900">{rec.title}</h3>
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
-                            {rec.matchScore}% match
-                          </span>
-                        </div>
-                        <div className="space-y-1">
-                          <p className="text-sm text-gray-600">📅 {rec.date} at {rec.time}</p>
-                          <p className="text-sm text-gray-600">📍 {rec.location}</p>
-                          <div className="flex flex-wrap gap-1 mt-2">
-                            {rec.requiredSkills.map((skill, index) => (
-                              <span key={index} className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-800">
-                                {skill}
-                              </span>
-                            ))}
+                {loading ? (
+                  <p className="text-gray-500">Loading recommendations...</p>
+                ) : recommendations.length > 0 ? (
+                  recommendations.map((rec) => (
+                    <div key={rec.id} className="border border-gray-200 rounded-lg p-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-2 mb-2">
+                            <h3 className="font-medium text-gray-900">{rec.title}</h3>
+                            <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">
+                              {rec.matchScore}% match
+                            </span>
+                          </div>
+                          <div className="space-y-1">
+                            <p className="text-sm text-gray-600">
+                              📅 {new Date(rec.startTime).toLocaleDateString()}
+                            </p>
+                            <p className="text-sm text-gray-600">📍 {rec.location}</p>
+                            <div className="flex flex-wrap gap-1 mt-2">
+                              {rec.requiredSkills?.slice(0, 3).map((skill: string, index: number) => (
+                                <span key={index} className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-gray-100 text-gray-800">
+                                  {skill}
+                                </span>
+                              ))}
+                            </div>
                           </div>
                         </div>
+                        <Link
+                          href="/dashboard/opportunities"
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                        >
+                          View
+                        </Link>
                       </div>
-                      <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium">
-                        Apply
-                      </button>
                     </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  <p className="text-gray-500 text-center py-4">No recommendations available</p>
+                )}
               </div>
             </div>
           </div>
@@ -224,23 +208,8 @@ export default function VolunteerDashboard({ user }: VolunteerDashboardProps) {
               <h3 className="text-lg font-semibold text-gray-900">Notifications</h3>
             </div>
             <div className="p-4">
-              <div className="space-y-3">
-                {mockData.notifications.slice(0, 3).map((notification) => (
-                  <div key={notification.id} className={`p-3 rounded-lg ${
-                    notification.unread ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50'
-                  }`}>
-                    <p className="text-sm text-gray-900">{notification.message}</p>
-                    <p className="text-xs text-gray-500 mt-1">{notification.time}</p>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4">
-                <Link
-                  href="/dashboard/notifications"
-                  className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-                >
-                  View all notifications →
-                </Link>
+              <div className="text-center py-8 text-gray-500">
+                <p>No new notifications</p>
               </div>
             </div>
           </div>

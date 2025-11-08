@@ -35,12 +35,6 @@ const navItems: NavItem[] = [
     roles: ['ADMIN']
   },
   {
-    name: 'Matching',
-    href: '/dashboard/matching',
-    icon: 'target',
-    roles: ['ADMIN']
-  },
-  {
     name: 'My Profile',
     href: '/dashboard/profile',
     icon: 'user',

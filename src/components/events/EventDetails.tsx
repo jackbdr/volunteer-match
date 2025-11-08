@@ -36,9 +36,14 @@ export default function EventDetails({ eventId }: EventDetailsProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [calculating, setCalculating] = useState(false);
+  const [creatingZoom, setCreatingZoom] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [matches, setMatches] = useState<any[]>([]);
+  const [showMatches, setShowMatches] = useState(false);
 
   useEffect(() => {
     fetchEvent();
+    fetchMatches();
   }, [eventId]);
 
   const fetchEvent = async () => {
@@ -57,6 +62,21 @@ export default function EventDetails({ eventId }: EventDetailsProps) {
       setError(error instanceof Error ? error.message : 'Failed to load event');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchMatches = async () => {
+    try {
+      const response = await fetch(`/api/events/${eventId}/matches`);
+      if (response.ok) {
+        const matchesData = await response.json();
+        if (matchesData.length > 0) {
+          setMatches(matchesData);
+          setShowMatches(true);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching matches:', error);
     }
   };
 
@@ -99,13 +119,22 @@ export default function EventDetails({ eventId }: EventDetailsProps) {
       }
 
       const result = await response.json();
-      alert(`Matches calculated successfully! Found ${result.matchesFound || result.matchCount || 0} matches.`);
       
-      // Refresh event data to show updated match count
+      const matchesResponse = await fetch(`/api/events/${eventId}/matches`);
+      if (matchesResponse.ok) {
+        const matchesData = await matchesResponse.json();
+        setMatches(matchesData);
+        setShowMatches(true);
+      }
+      
+      setSuccessMessage(`${result.matchesCreated} new matches created! Total matches: ${result.matchesFound}`);
+      setTimeout(() => setSuccessMessage(''), 3000);
+      
       fetchEvent();
     } catch (error) {
       console.error('Error calculating matches:', error);
-      alert(error instanceof Error ? error.message : 'Failed to calculate matches');
+      setError(error instanceof Error ? error.message : 'Failed to calculate matches');
+      setTimeout(() => setError(''), 5000);
     } finally {
       setCalculating(false);
     }
@@ -134,6 +163,30 @@ export default function EventDetails({ eventId }: EventDetailsProps) {
     } catch (error) {
       console.error('Error deleting event:', error);
       alert('Failed to delete event');
+    }
+  };
+
+  const createZoomMeeting = async () => {
+    setCreatingZoom(true);
+    try {
+      const response = await fetch(`/api/events/${eventId}/zoom`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to create Zoom meeting');
+      }
+
+      setSuccessMessage('Zoom meeting created successfully!');
+      setTimeout(() => setSuccessMessage(''), 3000);
+      fetchEvent();
+    } catch (error) {
+      console.error('Error creating Zoom meeting:', error);
+      setError(error instanceof Error ? error.message : 'Failed to create Zoom meeting');
+      setTimeout(() => setError(''), 5000);
+    } finally {
+      setCreatingZoom(false);
     }
   };
 
@@ -208,6 +261,16 @@ export default function EventDetails({ eventId }: EventDetailsProps) {
 
   return (
     <div className="space-y-6">
+      {/* Success Message Toast */}
+      {successMessage && (
+        <div className="fixed top-4 right-4 z-50 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-2">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+          <span>{successMessage}</span>
+        </div>
+      )}
+
       {/* Header with Navigation */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <div className="flex items-center justify-between">
@@ -315,10 +378,89 @@ export default function EventDetails({ eventId }: EventDetailsProps) {
                         )}
                       </div>
                     ) : (
-                      <p className="text-blue-800">
-                        <span className="font-medium">Status:</span> Zoom meeting will be created automatically
-                      </p>
+                      <div className="space-y-3">
+                        <p className="text-blue-800">
+                          <span className="font-medium">Status:</span> No Zoom meeting created yet
+                        </p>
+                        <button
+                          onClick={createZoomMeeting}
+                          disabled={creatingZoom}
+                          className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          {creatingZoom ? (
+                            <span className="flex items-center justify-center">
+                              <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                              </svg>
+                              Creating Meeting...
+                            </span>
+                          ) : (
+                            'Create Zoom Meeting'
+                          )}
+                        </button>
+                      </div>
                     )}
+                  </div>
+                </div>
+              )}
+
+              {/* Matched Volunteers */}
+              {showMatches && matches.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Matched Volunteers</h3>
+                  <div className="bg-white border border-gray-200 rounded-lg">
+                    <div className="p-4 border-b border-gray-200 bg-gray-50">
+                      <p className="text-sm text-gray-600">{matches.length} volunteers matched</p>
+                    </div>
+                    <div className="max-h-96 overflow-y-auto">
+                      <div className="divide-y divide-gray-200">
+                        {matches.map((match: any) => (
+                          <div key={match.id} className="p-4 hover:bg-gray-50">
+                            <div className="flex items-start space-x-3">
+                              <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                <span className="text-blue-600 font-medium text-sm">
+                                  {match.volunteer.user.name?.charAt(0) || match.volunteer.user.email.charAt(0).toUpperCase()}
+                                </span>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between">
+                                  <h4 className="text-sm font-medium text-gray-900 truncate">
+                                    {match.volunteer.user.name || 'Unnamed Volunteer'}
+                                  </h4>
+                                  <span className="text-xs font-medium text-green-600">{match.score}%</span>
+                                </div>
+                                <p className="text-xs text-gray-500 truncate">{match.volunteer.user.email}</p>
+                                <div className="mt-2 flex flex-wrap gap-1">
+                                  {match.volunteer.skills.slice(0, 3).map((skill: string, idx: number) => (
+                                    <span
+                                      key={idx}
+                                      className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-gray-100 text-gray-700"
+                                    >
+                                      {skill}
+                                    </span>
+                                  ))}
+                                  {match.volunteer.skills.length > 3 && (
+                                    <span className="text-xs text-gray-500">+{match.volunteer.skills.length - 3}</span>
+                                  )}
+                                </div>
+                                <span
+                                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-2 ${
+                                    match.status === 'ACCEPTED'
+                                      ? 'bg-green-100 text-green-800'
+                                      : match.status === 'DECLINED'
+                                      ? 'bg-red-100 text-red-800'
+                                      : 'bg-yellow-100 text-yellow-800'
+                                  }`}
+                                >
+                                  {match.status}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
