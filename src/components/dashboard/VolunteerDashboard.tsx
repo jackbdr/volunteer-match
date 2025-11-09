@@ -182,15 +182,15 @@ export default function VolunteerDashboard({ user }: VolunteerDashboardProps): R
                         </div>
                         <div className="mt-4 flex gap-3">
                           <button
-                            onClick={() => respondToInvitation(invitation.matchId, 'accept')}
-                            disabled={respondingTo === invitation.matchId}
+                            onClick={() => respondToInvitation(invitation.id, 'accept')}
+                            disabled={respondingTo === invitation.id}
                             className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                           >
-                            {respondingTo === invitation.matchId ? 'Processing...' : '✓ Accept'}
+                            {respondingTo === invitation.id ? 'Processing...' : '✓ Accept'}
                           </button>
                           <button
-                            onClick={() => respondToInvitation(invitation.matchId, 'decline')}
-                            disabled={respondingTo === invitation.matchId}
+                            onClick={() => respondToInvitation(invitation.id, 'decline')}
+                            disabled={respondingTo === invitation.id}
                             className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium"
                           >
                             ✗ Decline
