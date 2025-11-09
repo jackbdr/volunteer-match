@@ -138,29 +138,38 @@ export class MatchingService {
    * Calculate matches and save them to the database
    * Returns both existing and newly created matches
    */
-  public async calculateAndSaveMatches(eventId: string, user: AuthUser): Promise<{ matchesFound: number; matchesCreated: number }> {
+  public async calculateAndSaveMatches(eventId: string, _user: AuthUser): Promise<{ matchesFound: number; matchesCreated: number }> {
     const event = await this.eventRepository.findById(eventId);
     
     const volunteers = await this.volunteerRepository.findBySkills(event.requiredSkills);
 
-    let matchesCreated = 0;
+    const existingMatches = await this.eventMatchRepository.findByEventId(eventId);
+    const existingVolunteerIds = new Set(existingMatches.map(m => m.volunteerId));
+
+    const newMatches: CreateEventMatchData[] = [];
     
     for (const volunteer of volunteers) {
       const score = this.calculateMatchScore(volunteer.skills, event.requiredSkills);
       
-      if (score > 0) {
-        const existingMatch = await this.eventMatchRepository.findByEventAndVolunteer(eventId, volunteer.id);
-        
-        if (!existingMatch) {
-          await this.createMatch(eventId, volunteer.id, user, { score });
-          matchesCreated++;
-        }
+      if (score > 0 && !existingVolunteerIds.has(volunteer.id)) {
+        newMatches.push({
+          eventId,
+          volunteerId: volunteer.id,
+          status: MatchStatus.PENDING,
+          score,
+          notified: false,
+          emailSentAt: null,
+        });
       }
+    }
+
+    if (newMatches.length > 0) {
+      await this.eventMatchRepository.createMany(newMatches);
     }
 
     return {
       matchesFound: volunteers.length,
-      matchesCreated,
+      matchesCreated: newMatches.length,
     };
   }
 }

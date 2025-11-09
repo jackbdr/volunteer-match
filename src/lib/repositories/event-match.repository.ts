@@ -166,6 +166,17 @@ export class EventMatchRepository extends BaseRepository {
   }
 
   /**
+   * Batch create multiple event matches
+   */
+  public async createMany(data: CreateEventMatchData[]): Promise<number> {
+    const result = await this.prisma.eventMatch.createMany({
+      data,
+      skipDuplicates: true,
+    });
+    return result.count;
+  }
+
+  /**
    * Update match status
    */
   public async updateStatus(id: string, status: MatchStatus): Promise<EventMatch> {
