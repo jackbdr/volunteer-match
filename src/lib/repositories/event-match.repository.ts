@@ -125,6 +125,71 @@ export class EventMatchRepository extends BaseRepository {
   }
 
   /**
+   * Find matches for a volunteer by status
+   */
+  public async findByVolunteerIdAndStatus(volunteerId: string, status: MatchStatus): Promise<any[]> {
+    return this.prisma.eventMatch.findMany({
+      where: { 
+        volunteerId,
+        status 
+      },
+      include: {
+        event: true,
+        volunteer: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        matchedAt: 'desc',
+      },
+    });
+  }
+
+  /**
+   * Find match by ID
+   */
+  public async findById(id: string): Promise<EventMatchWithRelations> {
+    const match = await this.prisma.eventMatch.findUnique({
+      where: { id },
+      include: {
+        event: {
+          select: {
+            id: true,
+            title: true,
+            startTime: true,
+            eventType: true,
+          },
+        },
+        volunteer: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!match) {
+      throw new NotFoundError(`Event match with ID ${id} not found`);
+    }
+
+    return match as EventMatchWithRelations;
+  }
+
+  /**
    * Create a new event match
    */
   public async create(data: CreateEventMatchData): Promise<EventMatch> {
@@ -141,6 +206,23 @@ export class EventMatchRepository extends BaseRepository {
       return await this.prisma.eventMatch.update({
         where: { id },
         data: { status },
+      });
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {
+        throw new NotFoundError(`Event match with ID ${id} not found`);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Update match fields
+   */
+  public async update(id: string, data: Partial<Omit<EventMatch, 'id' | 'eventId' | 'volunteerId' | 'matchedAt'>>): Promise<EventMatch> {
+    try {
+      return await this.prisma.eventMatch.update({
+        where: { id },
+        data,
       });
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2025') {

@@ -5,6 +5,7 @@ import { NotFoundError } from '@/lib/errors';
 export type EventWithRelations = Event & {
   _count: {
     matches: number;
+    registeredVolunteers?: number;
   };
 };
 
@@ -29,7 +30,7 @@ export class EventRepository extends BaseRepository {
     if (filters?.location) where.location = { contains: filters.location, mode: 'insensitive' };
     if (filters?.status) where.status = filters.status as any;
 
-    return this.prisma.event.findMany({
+    const events = await this.prisma.event.findMany({
       where,
       include: {
         _count: {
@@ -37,11 +38,28 @@ export class EventRepository extends BaseRepository {
             matches: true,
           },
         },
+        matches: {
+          where: {
+            status: 'ACCEPTED',
+          },
+          select: {
+            id: true,
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',
       },
     });
+
+    return events.map(event => ({
+      ...event,
+      _count: {
+        matches: event._count.matches,
+        registeredVolunteers: event.matches.length,
+      },
+      matches: undefined,
+    })) as EventWithRelations[];
   }
 
   /**
@@ -56,6 +74,14 @@ export class EventRepository extends BaseRepository {
             matches: true,
           },
         },
+        matches: {
+          where: {
+            status: 'ACCEPTED',
+          },
+          select: {
+            id: true,
+          },
+        },
       },
     });
 
@@ -63,7 +89,14 @@ export class EventRepository extends BaseRepository {
       throw new NotFoundError(`Event with ID ${id} not found`);
     }
 
-    return event;
+    return {
+      ...event,
+      _count: {
+        matches: event._count.matches,
+        registeredVolunteers: event.matches.length,
+      },
+      matches: undefined,
+    } as EventWithRelations;
   }
 
   /**
