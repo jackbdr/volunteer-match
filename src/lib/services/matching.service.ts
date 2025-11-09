@@ -20,6 +20,16 @@ export class MatchingService {
     this.volunteerRepository = volunteerRepository;
   }
 
+  /**
+   * Get all matches (admin only)
+   */
+  public async getAllMatches(user: AuthUser): Promise<EventMatchWithRelations[]> {
+    if (user.role !== 'ADMIN') {
+      throw new ForbiddenError('Only administrators can view all matches');
+    }
+
+    return this.eventMatchRepository.findAll();
+  }
 
   /**
    * Get all matches for a volunteer
@@ -53,10 +63,6 @@ export class MatchingService {
       throw new ValidationError('Match between this volunteer and event already exists');
     }
 
-    if (!event.isActive) {
-      throw new ValidationError('Cannot create match for inactive event');
-    }
-
     if (event.startTime <= new Date()) {
       throw new ValidationError('Cannot create match for past event');
     }
@@ -81,11 +87,14 @@ export class MatchingService {
       return 0;
     }
 
-    const matchingSkills = volunteerSkills.filter(skill => 
-      eventSkills.includes(skill)
+    const normalizedVolunteerSkills = volunteerSkills.map(s => s.toLowerCase());
+    const normalizedEventSkills = eventSkills.map(s => s.toLowerCase());
+
+    const matchingSkills = normalizedVolunteerSkills.filter(skill => 
+      normalizedEventSkills.includes(skill)
     );
 
-    return (matchingSkills.length / eventSkills.length) * 100;
+    return Math.round((matchingSkills.length / normalizedEventSkills.length) * 100);
   }
 
   /**
@@ -118,8 +127,40 @@ export class MatchingService {
     return volunteers.map(volunteer => ({
       volunteer,
       matchScore: this.calculateMatchScore(volunteer.skills, event.requiredSkills),
+      score: this.calculateMatchScore(volunteer.skills, event.requiredSkills), // Add score field for consistency
+      status: 'PENDING', // Default status for recommendations
     })).filter(rec => rec.matchScore > 0)
       .sort((a, b) => b.matchScore - a.matchScore);
+  }
+
+  /**
+   * Calculate matches and save them to the database
+   * Returns both existing and newly created matches
+   */
+  public async calculateAndSaveMatches(eventId: string, user: AuthUser): Promise<{ matchesFound: number; matchesCreated: number }> {
+    const event = await this.eventRepository.findById(eventId);
+    
+    const volunteers = await this.volunteerRepository.findBySkills(event.requiredSkills);
+
+    let matchesCreated = 0;
+    
+    for (const volunteer of volunteers) {
+      const score = this.calculateMatchScore(volunteer.skills, event.requiredSkills);
+      
+      if (score > 0) {
+        const existingMatch = await this.eventMatchRepository.findByEventAndVolunteer(eventId, volunteer.id);
+        
+        if (!existingMatch) {
+          await this.createMatch(eventId, volunteer.id, user, { score });
+          matchesCreated++;
+        }
+      }
+    }
+
+    return {
+      matchesFound: volunteers.length,
+      matchesCreated,
+    };
   }
 }
 
