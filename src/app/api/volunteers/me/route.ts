@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '@/lib/middleware/auth-handler';
 import { volunteerService } from '@/lib/services/volunteer.service';
+import { createVolunteerSchema, updateVolunteerSchema } from '@/lib/validations/volunteer';
 
 /**
  * GET /api/volunteers/me
@@ -18,8 +19,9 @@ export const GET = withAuth(async (user) => {
  * Authenticated users only
  */
 export const POST = withAuth(async (user, request: NextRequest) => {
-  const data = await request.json();
-  const volunteer = await volunteerService.createProfile(user, data);
+  const body = await request.json();
+  const validatedData = createVolunteerSchema.parse(body);
+  const volunteer = await volunteerService.createProfile(user, validatedData);
 
   return NextResponse.json(volunteer, { status: 201 });
 });
@@ -30,8 +32,9 @@ export const POST = withAuth(async (user, request: NextRequest) => {
  * Authenticated volunteers only
  */
 export const PATCH = withAuth(async (user, request: NextRequest) => {
-  const data = await request.json();
-  const volunteer = await volunteerService.updateProfile(user, data);
+  const body = await request.json();
+  const validatedData = updateVolunteerSchema.parse(body);
+  const volunteer = await volunteerService.updateProfile(user, validatedData);
   
   return NextResponse.json(volunteer, { status: 200 });
 });

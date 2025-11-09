@@ -4,7 +4,7 @@ import { EventMatchRepository } from '@/lib/repositories/event-match.repository'
 import { ZoomService } from '@/lib/services/zoom.service';
 import { EmailService } from '@/lib/services/email.service';
 import { ForbiddenError, ValidationError, NotFoundError } from '@/lib/errors';
-import { createEventSchema } from '@/lib/validations/event';
+import { CreateEventInput, UpdateEventInput } from '@/lib/validations/event';
 import type { AuthUser } from '@/lib/types/auth';
 
 export class EventService {
@@ -28,12 +28,10 @@ export class EventService {
   /**
    * Create a new event
    */
-  public async createEvent(user: AuthUser, data: unknown): Promise<Event> {
+  public async createEvent(user: AuthUser, validatedData: CreateEventInput): Promise<Event> {
     if (user.role !== UserRole.ADMIN) {
       throw new ForbiddenError('Only administrators can create events');
     }
-
-    const validatedData = createEventSchema.parse(data);
 
     const startTime = new Date(validatedData.startTime);
     if (startTime <= new Date()) {
@@ -56,14 +54,12 @@ export class EventService {
   /**
    * Update an existing event
    */
-  public async updateEvent(id: string, user: AuthUser, data: unknown): Promise<Event> {
+  public async updateEvent(id: string, user: AuthUser, validatedData: UpdateEventInput): Promise<Event> {
     if (user.role !== UserRole.ADMIN) {
       throw new ForbiddenError('Only administrators can update events');
     }
 
     await this.eventRepository.findById(id);
-
-    const validatedData = createEventSchema.partial().parse(data);
 
     const updateData = {
       ...validatedData,

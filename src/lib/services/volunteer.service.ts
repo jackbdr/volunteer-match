@@ -2,7 +2,7 @@ import { Volunteer, UserRole, MatchStatus, EventStatus } from '@prisma/client';
 import { VolunteerRepository, CreateVolunteerData, VolunteerWithRelations } from '@/lib/repositories/volunteer.repository';
 import { EventMatchRepository } from '@/lib/repositories/event-match.repository';
 import { ForbiddenError, ValidationError, NotFoundError } from '@/lib/errors';
-import { createVolunteerSchema } from '@/lib/validations/volunteer';
+import { CreateVolunteerInput, UpdateVolunteerInput } from '@/lib/validations/volunteer';
 import type { AuthUser } from '@/lib/types/auth';
 
 export class VolunteerService {
@@ -57,13 +57,11 @@ export class VolunteerService {
   /**
    * Create volunteer profile
    */
-  public async createProfile(user: AuthUser, data: unknown): Promise<Volunteer> {
+  public async createProfile(user: AuthUser, validatedData: CreateVolunteerInput): Promise<Volunteer> {
     const existingProfile = await this.volunteerRepository.findByUserId(user.id);
     if (existingProfile) {
       throw new ValidationError('Volunteer profile already exists for this user');
     }
-
-    const validatedData = createVolunteerSchema.parse(data);
 
     const volunteerData: CreateVolunteerData = {
       ...validatedData,
@@ -77,23 +75,19 @@ export class VolunteerService {
   /**
    * Update volunteer profile
    */
-  public async updateProfile(user: AuthUser, data: unknown): Promise<Volunteer> {
-    const validatedData = createVolunteerSchema.partial().parse(data);
-
+  public async updateProfile(user: AuthUser, validatedData: UpdateVolunteerInput): Promise<Volunteer> {
     return this.volunteerRepository.updateByUserId(user.id, validatedData);
   }
 
   /**
    * Update volunteer profile by ID (admin only)
    */
-  public async updateVolunteerById(id: string, user: AuthUser, data: unknown): Promise<Volunteer> {
+  public async updateVolunteerById(id: string, user: AuthUser, validatedData: UpdateVolunteerInput): Promise<Volunteer> {
     const volunteer = await this.volunteerRepository.findById(id);
 
     if (user.role !== UserRole.ADMIN && volunteer.userId !== user.id) {
       throw new ForbiddenError('You can only update your own volunteer profile');
     }
-
-    const validatedData = createVolunteerSchema.partial().parse(data);
 
     return this.volunteerRepository.update(id, validatedData);
   }

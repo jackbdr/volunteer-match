@@ -58,3 +58,7 @@ export const zoomWebhookSchema = z.object({
     }),
   }),
 });
+
+export type CreateZoomMeetingInput = z.infer<typeof createZoomMeetingSchema>;
+export type UpdateZoomMeetingInput = z.infer<typeof updateZoomMeetingSchema>;
+export type ZoomWebhookPayload = z.infer<typeof zoomWebhookSchema>;

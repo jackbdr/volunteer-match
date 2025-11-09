@@ -4,6 +4,7 @@ import { eventService } from '@/lib/services/event.service';
 import { EventRepository } from '@/lib/repositories/event.repository';
 import { parseEventFilters } from '@/lib/utils/query-params';
 import { serializeEvents, serializeEvent } from '@/lib/utils/serialization';
+import { createEventSchema } from '@/lib/validations/event';
 import { UserRole } from '@prisma/client';
 
 const eventRepository = new EventRepository();
@@ -27,8 +28,9 @@ export const GET = withOptionalAuth(async (user, request: NextRequest) => {
  * Admin only
  */
 export const POST = withAuth(async (user, request: NextRequest) => {
-  const data = await request.json();
-  const event = await eventService.createEvent(user, data);
+  const body = await request.json();
+  const validatedData = createEventSchema.parse(body);
+  const event = await eventService.createEvent(user, validatedData);
   
   return NextResponse.json(serializeEvent(event), { status: 201 });
 }, UserRole.ADMIN);

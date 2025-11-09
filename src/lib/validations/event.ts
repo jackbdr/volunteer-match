@@ -12,7 +12,7 @@ export const createEventSchema = z.object({
   startTime: z.iso.datetime(),
   duration: z.number().int().min(30, 'Duration must be at least 30 minutes').max(480, 'Duration cannot exceed 8 hours'),
   meetingUrl: z.url().optional(),
-  zoomMeetingId: z.string().optional(),
+  zoomMeetingId: z.union([z.string(), z.bigint()]).optional().nullable().transform(val => val ? (typeof val === 'string' ? BigInt(val) : val) : null),
   registrationDeadline: z.iso.datetime().optional(),
   maxVolunteers: z.number().int().min(1).optional(),
 });

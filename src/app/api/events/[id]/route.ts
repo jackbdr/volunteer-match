@@ -3,6 +3,7 @@ import { withOptionalAuth, withAuth } from '@/lib/middleware/auth-handler';
 import { eventService } from '@/lib/services/event.service';
 import { EventRepository } from '@/lib/repositories/event.repository';
 import { serializeEvent } from '@/lib/utils/serialization';
+import { updateEventSchema } from '@/lib/validations/event';
 import { UserRole } from '@prisma/client';
 
 const eventRepository = new EventRepository();
@@ -26,8 +27,9 @@ export const GET = withOptionalAuth(async (user, request: NextRequest, context: 
  */
 export const PATCH = withAuth(async (user, request: NextRequest, context: { params: Promise<{ id: string }> }) => {
   const params = await context.params;
-  const data = await request.json();
-  const event = await eventService.updateEvent(params.id, user, data);
+  const body = await request.json();
+  const validatedData = updateEventSchema.parse(body);
+  const event = await eventService.updateEvent(params.id, user, validatedData);
 
   return NextResponse.json(serializeEvent(event), { status: 200 });
 }, UserRole.ADMIN);
