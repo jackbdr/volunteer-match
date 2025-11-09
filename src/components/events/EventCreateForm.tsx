@@ -151,7 +151,7 @@ export default function EventCreateForm(): React.JSX.Element {
       ...prev,
       eventType: type,
       // Auto-set location for virtual events
-      location: type === 'VIRTUAL' ? 'Online (Zoom meeting will be created automatically)' : prev.location === 'Online (Zoom meeting will be created automatically)' ? '' : prev.location
+      location: type === 'VIRTUAL' ? 'Online' : prev.location === 'Online' ? '' : prev.location
     }));
   };
 
@@ -252,7 +252,7 @@ export default function EventCreateForm(): React.JSX.Element {
                 >
                   <div className="text-lg mb-2">💻</div>
                   <div className="font-medium">Virtual</div>
-                  <div className="text-sm text-gray-600">Zoom meeting auto-created</div>
+                  <div className="text-sm text-gray-600">Online event</div>
                 </button>
               </div>
             </div>
@@ -307,7 +307,7 @@ export default function EventCreateForm(): React.JSX.Element {
                 className={`w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                   formData.eventType === 'VIRTUAL' ? 'bg-gray-100 text-gray-600' : ''
                 }`}
-                placeholder={formData.eventType === 'VIRTUAL' ? 'Zoom meeting will be created automatically' : 'e.g., 123 Main St, City, State'}
+                placeholder={formData.eventType === 'VIRTUAL' ? 'Online' : 'e.g., 123 Main St, City, State'}
               />
             </div>
           </div>
