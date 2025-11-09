@@ -65,8 +65,12 @@ export default function VolunteerDashboard({ user }: VolunteerDashboardProps) {
   const respondToInvitation = async (matchId: string, action: 'accept' | 'decline') => {
     setRespondingTo(matchId);
     try {
-      const response = await fetch(`/api/matches/${matchId}/respond?action=${action}`, {
+      const response = await fetch(`/api/volunteers/me/invitations/${matchId}/respond`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ action }),
       });
 
       if (!response.ok) {

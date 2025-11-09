@@ -217,8 +217,12 @@ export default function EventDetails({ eventId, isAdmin = true }: EventDetailsPr
 
     setSendingInvite(matchId);
     try {
-      const response = await fetch(`/api/events/${eventId}/invite?matchId=${matchId}`, {
+      const response = await fetch(`/api/events/${eventId}/invite`, {
         method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ matchId }),
       });
 
       if (!response.ok) {
