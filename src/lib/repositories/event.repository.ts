@@ -1,4 +1,4 @@
-import { Event, EventType, Prisma, PrismaClient } from '@prisma/client';
+import { Event, EventType, EventStatus, Prisma, PrismaClient } from '@prisma/client';
 import { BaseRepository } from './base.repository';
 import { NotFoundError } from '@/lib/errors';
 
@@ -28,7 +28,7 @@ export class EventRepository extends BaseRepository {
     
     if (filters?.type) where.eventType = filters.type;
     if (filters?.location) where.location = { contains: filters.location, mode: 'insensitive' };
-    if (filters?.status) where.status = filters.status as any;
+    if (filters?.status) where.status = filters.status as EventStatus;
 
     const events = await this.prisma.event.findMany({
       where,

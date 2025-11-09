@@ -1,11 +1,11 @@
 'use client';
 
-import { User } from '@prisma/client';
+import { AuthUser } from '@/lib/types/auth';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 interface AdminDashboardProps {
-  user: User;
+  user: AuthUser;
 }
 
 interface DashboardStats {
@@ -15,7 +15,7 @@ interface DashboardStats {
   recentMatches: number;
 }
 
-export default function AdminDashboard({ user }: AdminDashboardProps) {
+export default function AdminDashboard({ user }: AdminDashboardProps): React.JSX.Element {
   const [stats, setStats] = useState<DashboardStats>({
     totalEvents: 0,
     activeEvents: 0,
@@ -28,7 +28,7 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
     fetchDashboardData();
   }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = async (): Promise<void> => {
     try {
       const [eventsRes, volunteersRes, matchesRes] = await Promise.all([
         fetch('/api/events'),
@@ -42,23 +42,23 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
       let recentMatches = 0;
 
       if (eventsRes.ok) {
-        const events = await eventsRes.json();
-        const publishedEventsData = events.filter((e: any) => e.status === 'PUBLISHED');
+        const events = await eventsRes.json() as Array<{ status: string }>;
+        const publishedEventsData = events.filter((e) => e.status === 'PUBLISHED');
         totalEvents = events.length;
         activeEvents = publishedEventsData.length;
       }
 
       if (volunteersRes.ok) {
-        const volunteers = await volunteersRes.json();
+        const volunteers = await volunteersRes.json() as Array<unknown>;
         totalVolunteers = volunteers.length;
       }
 
       if (matchesRes.ok) {
-        const matches = await matchesRes.json();
+        const matches = await matchesRes.json() as Array<{ matchedAt: string }>;
         // Count matches created in the last 7 days
         const oneWeekAgo = new Date();
         oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
-        recentMatches = matches.filter((m: any) => new Date(m.matchedAt) > oneWeekAgo).length;
+        recentMatches = matches.filter((m) => new Date(m.matchedAt) > oneWeekAgo).length;
       }
         
       setStats({
@@ -81,7 +81,7 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
           Welcome back, {user.name || 'Admin'}! 👋
         </h1>
         <p className="text-blue-100">
-          Here's what's happening with your volunteer coordination today.
+          Here&apos;s what&apos;s happening with your volunteer coordination today.
         </p>
       </div>
 

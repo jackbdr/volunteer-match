@@ -73,6 +73,7 @@ export class MatchingService {
       status: MatchStatus.PENDING,
       score: matchData?.score || 0,
       notified: false,
+      emailSentAt: null,
     };
 
     return this.eventMatchRepository.create(createData);

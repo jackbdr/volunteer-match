@@ -1,6 +1,6 @@
 import { Volunteer, UserRole, MatchStatus, EventStatus } from '@prisma/client';
 import { VolunteerRepository, CreateVolunteerData, VolunteerWithRelations } from '@/lib/repositories/volunteer.repository';
-import { EventMatchRepository } from '@/lib/repositories/event-match.repository';
+import { EventMatchRepository, EventMatchWithRelations } from '@/lib/repositories/event-match.repository';
 import { ForbiddenError, ValidationError, NotFoundError } from '@/lib/errors';
 import { CreateVolunteerInput, UpdateVolunteerInput } from '@/lib/validations/volunteer';
 import type { AuthUser } from '@/lib/types/auth';
@@ -107,7 +107,7 @@ export class VolunteerService {
   /**
    * Get pending invitations for current user
    */
-  public async getPendingInvitations(user: AuthUser) {
+  public async getPendingInvitations(user: AuthUser): Promise<EventMatchWithRelations[]> {
     const volunteer = await this.getCurrentUserProfile(user);
 
     const invitations = await this.eventMatchRepository.findByVolunteerIdAndStatus(
@@ -124,7 +124,7 @@ export class VolunteerService {
   /**
    * Get accepted matches (registered events) for current user
    */
-  public async getAcceptedMatches(user: AuthUser) {
+  public async getAcceptedMatches(user: AuthUser): Promise<EventMatchWithRelations[]> {
     const volunteer = await this.getCurrentUserProfile(user);
 
     const matches = await this.eventMatchRepository.findByVolunteerIdAndStatus(

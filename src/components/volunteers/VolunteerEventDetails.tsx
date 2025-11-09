@@ -25,7 +25,7 @@ interface VolunteerEventDetailsProps {
   eventId: string;
 }
 
-export default function VolunteerEventDetails({ eventId }: VolunteerEventDetailsProps) {
+export default function VolunteerEventDetails({ eventId }: VolunteerEventDetailsProps): React.JSX.Element {
   const router = useRouter();
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,40 +34,40 @@ export default function VolunteerEventDetails({ eventId }: VolunteerEventDetails
   const [applying, setApplying] = useState(false);
 
   useEffect(() => {
+    const fetchEventDetails = async (): Promise<void> => {
+      try {
+        const response = await fetch(`/api/events/${eventId}`);
+        if (!response.ok) {
+          throw new Error('Failed to fetch event details');
+        }
+        const data = await response.json();
+        setEvent(data);
+      } catch (error) {
+        console.error('Error fetching event:', error);
+        setError('Failed to load event details');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const checkRegistrationStatus = async (): Promise<void> => {
+      try {
+        // Check if volunteer is already registered for this event
+        const response = await fetch(`/api/events/${eventId}/registration-status`);
+        if (response.ok) {
+          const data = await response.json();
+          setIsRegistered(data.isRegistered);
+        }
+      } catch (error) {
+        console.error('Error checking registration status:', error);
+      }
+    };
+
     fetchEventDetails();
     checkRegistrationStatus();
   }, [eventId]);
 
-  const fetchEventDetails = async () => {
-    try {
-      const response = await fetch(`/api/events/${eventId}`);
-      if (!response.ok) {
-        throw new Error('Failed to fetch event details');
-      }
-      const data = await response.json();
-      setEvent(data);
-    } catch (error) {
-      console.error('Error fetching event:', error);
-      setError('Failed to load event details');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const checkRegistrationStatus = async () => {
-    try {
-      // Check if volunteer is already registered for this event
-      const response = await fetch(`/api/events/${eventId}/registration-status`);
-      if (response.ok) {
-        const data = await response.json();
-        setIsRegistered(data.isRegistered);
-      }
-    } catch (error) {
-      console.error('Error checking registration status:', error);
-    }
-  };
-
-  const handleApply = async () => {
+  const handleApply = async (): Promise<void> => {
     if (applying) return;
 
     setApplying(true);
@@ -90,7 +90,7 @@ export default function VolunteerEventDetails({ eventId }: VolunteerEventDetails
     }
   };
 
-  const formatDateTime = (dateString: string) => {
+  const formatDateTime = (dateString: string): { date: string; time: string } => {
     const date = new Date(dateString);
     return {
       date: date.toLocaleDateString('en-GB', { 

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { User } from '@prisma/client';
+import { AuthUser } from '@/lib/types/auth';
 
 interface VolunteerProfile {
   id?: string;
@@ -13,7 +13,7 @@ interface VolunteerProfile {
 }
 
 interface VolunteerProfileFormProps {
-  user: User;
+  user: AuthUser;
 }
 
 const skillOptions = [
@@ -93,7 +93,7 @@ const causeOptions = [
   'Disability Support'
 ];
 
-export default function VolunteerProfileForm({ user }: VolunteerProfileFormProps) {
+export default function VolunteerProfileForm({ user: _user }: VolunteerProfileFormProps): React.JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
@@ -122,7 +122,7 @@ export default function VolunteerProfileForm({ user }: VolunteerProfileFormProps
     }
   }, [profile, originalProfile]);
 
-  const fetchProfile = async () => {
+  const fetchProfile = async (): Promise<void> => {
     setIsLoading(true);
     try {
       const response = await fetch('/api/volunteers/me');
@@ -141,7 +141,7 @@ export default function VolunteerProfileForm({ user }: VolunteerProfileFormProps
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = async (): Promise<void> => {
     setIsSaving(true);
     setError('');
     setSuccess('');
@@ -175,7 +175,7 @@ export default function VolunteerProfileForm({ user }: VolunteerProfileFormProps
     }
   };
 
-  const handleArrayToggle = (field: keyof VolunteerProfile, value: string) => {
+  const handleArrayToggle = (field: keyof VolunteerProfile, value: string): void => {
     setProfile(prev => ({
       ...prev,
       [field]: (prev[field] as string[]).includes(value)
@@ -184,9 +184,9 @@ export default function VolunteerProfileForm({ user }: VolunteerProfileFormProps
     }));
   };
 
-  const calculateProfileCompleteness = () => {
+  const calculateProfileCompleteness = (): number => {
     let completed = 0;
-    let total = 5;
+    const total = 5;
 
     if (profile.skills.length > 0) completed++;
     if (profile.availability.length > 0) completed++;

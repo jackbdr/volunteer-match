@@ -1,10 +1,10 @@
-import { User } from '@prisma/client';
+import { AuthUser } from '@/lib/types/auth';
 
 interface DashboardHeaderProps {
-  user: User;
+  user: AuthUser;
 }
 
-export default function DashboardHeader({ user }: DashboardHeaderProps) {
+export default function DashboardHeader({ user }: DashboardHeaderProps): React.JSX.Element {
   return (
     <header className="bg-white border-b border-gray-200 sticky top-0 z-40">
       <div className="px-6 py-4">

@@ -1,14 +1,14 @@
 import { ReactNode } from 'react';
-import { User, UserRole } from '@prisma/client';
+import { AuthUser } from '@/lib/types/auth';
 import DashboardSidebar from './DashboardSidebar';
 import DashboardHeader from './DashboardHeader';
 
 interface DashboardLayoutProps {
-  user: User;
+  user: AuthUser;
   children: ReactNode;
 }
 
-export default function DashboardLayout({ user, children }: DashboardLayoutProps) {
+export default function DashboardLayout({ user, children }: DashboardLayoutProps): React.JSX.Element {
   return (
     <div className="min-h-screen bg-gray-50">
       <DashboardHeader user={user} />

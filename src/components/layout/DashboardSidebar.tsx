@@ -1,11 +1,12 @@
 'use client';
 
-import { User, UserRole } from '@prisma/client';
+import { UserRole } from '@prisma/client';
+import { AuthUser } from '@/lib/types/auth';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 interface DashboardSidebarProps {
-  user: User;
+  user: AuthUser;
 }
 
 interface NavItem {
@@ -92,7 +93,7 @@ const icons = {
   )
 };
 
-export default function DashboardSidebar({ user }: DashboardSidebarProps) {
+export default function DashboardSidebar({ user }: DashboardSidebarProps): React.JSX.Element {
   const pathname = usePathname();
   
   const filteredNavItems = navItems.filter(item => 

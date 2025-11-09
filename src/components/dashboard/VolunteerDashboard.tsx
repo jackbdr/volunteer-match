@@ -1,11 +1,11 @@
 'use client';
 
-import { User } from '@prisma/client';
+import { AuthUser } from '@/lib/types/auth';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 interface VolunteerDashboardProps {
-  user: User;
+  user: AuthUser;
 }
 
 interface UpcomingEvent {
@@ -15,12 +15,31 @@ interface UpcomingEvent {
   eventType: string;
   location: string;
   meetingUrl?: string;
+  duration: number;
 }
 
-export default function VolunteerDashboard({ user }: VolunteerDashboardProps) {
+interface InvitationEvent {
+  id: string;
+  title: string;
+  startTime: string;
+  eventType: string;
+  location: string;
+  description: string;
+  duration: number;
+  requiredSkills: string[];
+}
+
+interface Invitation {
+  id: string;
+  matchId: string;
+  event: InvitationEvent;
+  score: number;
+  status: string;
+}
+
+export default function VolunteerDashboard({ user }: VolunteerDashboardProps): React.JSX.Element {
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
-  const [recommendations, setRecommendations] = useState<any[]>([]);
-  const [invitations, setInvitations] = useState<any[]>([]);
+  const [invitations, setInvitations] = useState<Invitation[]>([]);
   const [loading, setLoading] = useState(true);
   const [respondingTo, setRespondingTo] = useState<string | null>(null);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -29,15 +48,15 @@ export default function VolunteerDashboard({ user }: VolunteerDashboardProps) {
     fetchDashboardData();
   }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = async (): Promise<void> => {
     try {
       const matchesResponse = await fetch('/api/volunteers/me/matches');
       if (matchesResponse.ok) {
-        const data = await matchesResponse.json();
-        const accepted = data.matches.filter((m: any) => m.status === 'ACCEPTED');
+        const data = await matchesResponse.json() as { matches: Array<{ status: string; event: { id: string; title: string; startTime: string; eventType: string; location: string; meetingUrl?: string; duration: number } }> };
+        const accepted = data.matches.filter((m) => m.status === 'ACCEPTED');
         const upcoming = accepted
-          .filter((m: any) => new Date(m.event.startTime) > new Date())
-          .map((m: any) => ({
+          .filter((m) => new Date(m.event.startTime) > new Date())
+          .map((m) => ({
             id: m.event.id,
             title: m.event.title,
             startTime: m.event.startTime,
@@ -62,7 +81,7 @@ export default function VolunteerDashboard({ user }: VolunteerDashboardProps) {
     }
   };
 
-  const respondToInvitation = async (matchId: string, action: 'accept' | 'decline') => {
+  const respondToInvitation = async (matchId: string, action: 'accept' | 'decline'): Promise<void> => {
     setRespondingTo(matchId);
     try {
       const response = await fetch(`/api/volunteers/me/invitations/${matchId}/respond`, {
@@ -131,12 +150,12 @@ export default function VolunteerDashboard({ user }: VolunteerDashboardProps) {
                 </div>
               </div>
               <div className="divide-y divide-gray-200">
-                {invitations.map((invitation: any) => (
+                {invitations.map((invitation) => (
                   <div key={invitation.id} className="p-6">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
                         <h3 className="font-semibold text-gray-900 text-lg">{invitation.event.title}</h3>
-                        <p className="text-sm text-gray-600 mt-2">{invitation.event.description}</p>
+                        <p className="text-sm text-gray-600 mt-2">{invitation.event.description || 'No description available'}</p>
                         <div className="mt-3 space-y-1.5">
                           <p className="text-sm text-gray-600">
                             📅 {new Date(invitation.event.startTime).toLocaleDateString('en-US', {
@@ -149,13 +168,13 @@ export default function VolunteerDashboard({ user }: VolunteerDashboardProps) {
                             })}
                           </p>
                           <p className="text-sm text-gray-600">
-                            ⏱️ Duration: {invitation.event.duration} minutes
+                            ⏱️ Duration: {invitation.event.duration || 0} minutes
                           </p>
                           <p className="text-sm text-gray-600">
-                            📍 {invitation.event.eventType === 'VIRTUAL' ? 'Virtual (Online)' : invitation.event.location}
+                            📍 {invitation.event.eventType === 'VIRTUAL' ? 'Virtual (Online)' : (invitation.event.location || 'TBD')}
                           </p>
                           <p className="text-sm text-gray-600">
-                            🎯 Skills: {invitation.event.requiredSkills.join(', ')}
+                            🎯 Skills: {invitation.event.requiredSkills?.join(', ') || 'None specified'}
                           </p>
                           <p className="text-xs text-gray-500 mt-2">
                             Match score: {invitation.score}%
@@ -216,10 +235,10 @@ export default function VolunteerDashboard({ user }: VolunteerDashboardProps) {
                               })}
                             </p>
                             <p className="text-sm text-gray-600">
-                              ⏱️ Duration: {event.duration} minutes
+                              ⏱️ Duration: {event.duration || 0} minutes
                             </p>
                             {event.eventType === 'PHYSICAL' ? (
-                              <p className="text-sm text-gray-600">📍 {event.location}</p>
+                              <p className="text-sm text-gray-600">📍 {event.location || 'TBD'}</p>
                             ) : (
                               <p className="text-sm text-gray-600">💻 Virtual Event</p>
                             )}
@@ -250,7 +269,7 @@ export default function VolunteerDashboard({ user }: VolunteerDashboardProps) {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                   </svg>
                   <h3 className="mt-2 text-sm font-medium text-gray-900">No upcoming events</h3>
-                  <p className="mt-1 text-sm text-gray-500">You'll see events here once you accept invitations.</p>
+                  <p className="mt-1 text-sm text-gray-500">You&apos;ll see events here once you accept invitations.</p>
                 </div>
               )}
             </div>

@@ -22,7 +22,7 @@ interface Opportunity {
   };
 }
 
-export default function OpportunitiesList() {
+export default function OpportunitiesList(): React.JSX.Element {
   const router = useRouter();
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
@@ -43,7 +43,7 @@ export default function OpportunitiesList() {
     fetchOpportunities();
   }, []);
 
-  const fetchOpportunities = async () => {
+  const fetchOpportunities = async (): Promise<void> => {
     try {
       // Only fetch PUBLISHED events for volunteers
       const response = await fetch('/api/events?status=PUBLISHED');
@@ -53,10 +53,10 @@ export default function OpportunitiesList() {
       const data = await response.json();
       
       // Filter only active events and add mock match scores
-      const activeEvents = data.filter((event: any) => event.isActive && new Date(event.startTime) > new Date());
+      const activeEvents = data.filter((event: Opportunity) => new Date(event.startTime) > new Date());
       
       // Add mock match scores (in real app, this would come from the matching API)
-      const eventsWithScores = activeEvents.map((event: any) => ({
+      const eventsWithScores = activeEvents.map((event: Opportunity) => ({
         ...event,
         matchScore: Math.floor(Math.random() * 40) + 60 // Mock scores between 60-100
       }));
@@ -70,7 +70,7 @@ export default function OpportunitiesList() {
     }
   };
 
-  const applyToEvent = async (eventId: string) => {
+  const applyToEvent = async (eventId: string): Promise<void> => {
     try {
       // In a real application, this would create an application or match
       const response = await fetch(`/api/events/${eventId}/apply`, {
@@ -94,8 +94,8 @@ export default function OpportunitiesList() {
     }
   };
 
-  const filteredAndSortedOpportunities = () => {
-    let filtered = opportunities.filter(opp => {
+  const filteredAndSortedOpportunities = (): Opportunity[] => {
+    const filtered = opportunities.filter(opp => {
       const matchesSearch = opp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            opp.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            opp.location.toLowerCase().includes(searchTerm.toLowerCase());
@@ -123,7 +123,7 @@ export default function OpportunitiesList() {
     });
   };
 
-  const formatDateTime = (dateString: string) => {
+  const formatDateTime = (dateString: string): { date: string; time: string } => {
     const date = new Date(dateString);
     return {
       date: date.toLocaleDateString(),
@@ -131,14 +131,14 @@ export default function OpportunitiesList() {
     };
   };
 
-  const getMatchScoreColor = (score: number) => {
+  const getMatchScoreColor = (score: number): string => {
     if (score >= 90) return 'bg-green-100 text-green-800';
     if (score >= 80) return 'bg-blue-100 text-blue-800';
     if (score >= 70) return 'bg-yellow-100 text-yellow-800';
     return 'bg-gray-100 text-gray-800';
   };
 
-  const toggleSkillFilter = (skill: string) => {
+  const toggleSkillFilter = (skill: string): void => {
     setSelectedSkills(prev => 
       prev.includes(skill) 
         ? prev.filter(s => s !== skill)
@@ -223,7 +223,7 @@ export default function OpportunitiesList() {
             <div className="flex items-center space-x-4">
               <select
                 value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
+                onChange={(e) => setSortBy(e.target.value as 'match' | 'date' | 'title')}
                 className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="match">Sort by Match Score</option>
@@ -243,7 +243,7 @@ export default function OpportunitiesList() {
             ].map(({ value, label }) => (
               <button
                 key={value}
-                onClick={() => setSelectedType(value as any)}
+                onClick={() => setSelectedType(value as 'all' | EventType)}
                 className={`px-3 py-1 text-sm rounded-full transition-colors ${
                   selectedType === value
                     ? 'bg-blue-100 text-blue-700 font-medium'
@@ -294,7 +294,7 @@ export default function OpportunitiesList() {
             Showing {displayedOpportunities.length} of {opportunities.length} opportunities
           </span>
           {searchTerm && (
-            <span>Search: "{searchTerm}"</span>
+            <span>Search: &ldquo;{searchTerm}&rdquo;</span>
           )}
         </div>
       </div>

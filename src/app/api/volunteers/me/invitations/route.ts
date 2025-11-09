@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/middleware/auth-handler';
 import { volunteerService } from '@/lib/services/volunteer.service';
-import { serializeEvent } from '@/lib/utils/serialization';
+import { serializeInvitations } from '@/lib/utils/serialization';
 
 /**
  * GET /api/volunteers/me/invitations
@@ -9,16 +9,10 @@ import { serializeEvent } from '@/lib/utils/serialization';
  */
 export const GET = withAuth(async (user) => {
   const invitations = await volunteerService.getPendingInvitations(user);
+  const serializedInvitations = serializeInvitations(invitations);
 
   return NextResponse.json({
-    invitationCount: invitations.length,
-    invitations: invitations.map(inv => ({
-      id: inv.id,
-      matchId: inv.id,
-      score: inv.score,
-      emailSentAt: inv.emailSentAt,
-      matchedAt: inv.matchedAt,
-      event: serializeEvent(inv.event),
-    })),
+    invitationCount: serializedInvitations.length,
+    invitations: serializedInvitations,
   }, { status: 200 });
 });

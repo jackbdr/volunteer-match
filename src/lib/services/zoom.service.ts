@@ -164,7 +164,7 @@ export class ZoomService {
   /**
    * Validate Zoom webhook signature
    */
-  public validateWebhookSignature(payload: string, signature: string, timestamp: string): boolean {
+  public validateWebhookSignature(_payload: string, _signature: string, _timestamp: string): boolean {
     const webhookSecret = process.env.ZOOM_WEBHOOK_SECRET;
     if (!webhookSecret) {
       throw new Error('Zoom webhook secret is not configured');

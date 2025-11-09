@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { withAuth } from '@/lib/middleware/auth-handler';
 import { volunteerService } from '@/lib/services/volunteer.service';
-import { serializeEvent } from '@/lib/utils/serialization';
 
 /**
  * GET /api/volunteers/me/matches
@@ -15,7 +14,16 @@ export const GET = withAuth(async (user) => {
     score: match.score,
     status: match.status,
     matchedAt: match.matchedAt,
-    event: serializeEvent(match.event),
+    event: {
+      id: match.event.id,
+      title: match.event.title,
+      startTime: match.event.startTime,
+      eventType: match.event.eventType,
+      location: match.event.location,
+      meetingUrl: match.event.meetingUrl,
+      duration: match.event.duration,
+      status: match.event.status,
+    },
   }));
 
   return NextResponse.json({ 

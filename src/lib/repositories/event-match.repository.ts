@@ -1,14 +1,9 @@
-import { EventMatch, MatchStatus, Prisma, PrismaClient } from '@prisma/client';
+import { EventMatch, MatchStatus, Prisma, PrismaClient, Event } from '@prisma/client';
 import { BaseRepository } from './base.repository';
 import { NotFoundError } from '@/lib/errors';
 
 export type EventMatchWithRelations = EventMatch & {
-  event: {
-    id: string;
-    title: string;
-    startTime: Date;
-    eventType: string;
-  };
+  event: Event;
   volunteer: {
     id: string;
     user: {
@@ -32,14 +27,7 @@ export class EventMatchRepository extends BaseRepository {
   public async findAll(): Promise<EventMatchWithRelations[]> {
     return this.prisma.eventMatch.findMany({
       include: {
-        event: {
-          select: {
-            id: true,
-            title: true,
-            startTime: true,
-            eventType: true,
-          },
-        },
+        event: true,
         volunteer: {
           include: {
             user: {
@@ -65,14 +53,7 @@ export class EventMatchRepository extends BaseRepository {
     return this.prisma.eventMatch.findMany({
       where: { eventId },
       include: {
-        event: {
-          select: {
-            id: true,
-            title: true,
-            startTime: true,
-            eventType: true,
-          },
-        },
+        event: true,
         volunteer: {
           include: {
             user: {
@@ -98,14 +79,7 @@ export class EventMatchRepository extends BaseRepository {
     return this.prisma.eventMatch.findMany({
       where: { volunteerId },
       include: {
-        event: {
-          select: {
-            id: true,
-            title: true,
-            startTime: true,
-            eventType: true,
-          },
-        },
+        event: true,
         volunteer: {
           include: {
             user: {
@@ -127,7 +101,7 @@ export class EventMatchRepository extends BaseRepository {
   /**
    * Find matches for a volunteer by status
    */
-  public async findByVolunteerIdAndStatus(volunteerId: string, status: MatchStatus): Promise<any[]> {
+  public async findByVolunteerIdAndStatus(volunteerId: string, status: MatchStatus): Promise<EventMatchWithRelations[]> {
     return this.prisma.eventMatch.findMany({
       where: { 
         volunteerId,
@@ -160,14 +134,7 @@ export class EventMatchRepository extends BaseRepository {
     const match = await this.prisma.eventMatch.findUnique({
       where: { id },
       include: {
-        event: {
-          select: {
-            id: true,
-            title: true,
-            startTime: true,
-            eventType: true,
-          },
-        },
+        event: true,
         volunteer: {
           include: {
             user: {

@@ -9,9 +9,9 @@ import { UserRole } from '@prisma/client';
  * Get Zoom meeting details
  * Admin only
  */
-export const GET = withAuth(async (user, request: NextRequest, context: { params: Promise<{ id: bigint }> }) => {
+export const GET = withAuth(async (user, _request: NextRequest, context: { params: Promise<{ id: string }> }) => {
   const params = await context.params;
-  const meeting = await zoomService.getMeeting(params.id);
+  const meeting = await zoomService.getMeeting(BigInt(params.id));
 
   return NextResponse.json(meeting, { status: 200 });
 }, UserRole.ADMIN);
@@ -21,12 +21,12 @@ export const GET = withAuth(async (user, request: NextRequest, context: { params
  * Update Zoom meeting
  * Admin only
  */
-export const PATCH = withAuth(async (user, request: NextRequest, context: { params: Promise<{ id: bigint }> }) => {
+export const PATCH = withAuth(async (user, request: NextRequest, context: { params: Promise<{ id: string }> }) => {
   const params = await context.params;
   const data = await request.json();
   const validatedData = updateZoomMeetingSchema.parse(data);
 
-  const meeting = await zoomService.updateMeeting(params.id, validatedData);
+  const meeting = await zoomService.updateMeeting(BigInt(params.id), validatedData);
 
   return NextResponse.json(meeting, { status: 200 });
 }, UserRole.ADMIN);
@@ -36,10 +36,10 @@ export const PATCH = withAuth(async (user, request: NextRequest, context: { para
  * Delete Zoom meeting
  * Admin only
  */
-export const DELETE = withAuth(async (user, request: NextRequest, context: { params: Promise<{ id: bigint }> }) => {
+export const DELETE = withAuth(async (user, request: NextRequest, context: { params: Promise<{ id: string }> }) => {
   const params = await context.params;
   
-  await zoomService.deleteMeeting(params.id);
+  await zoomService.deleteMeeting(BigInt(params.id));
 
   return NextResponse.json({ success: true, message: 'Meeting deleted successfully' }, { status: 204 });
 }, UserRole.ADMIN);

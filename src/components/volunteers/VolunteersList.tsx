@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 
 interface Volunteer {
   id: string;
@@ -18,7 +17,7 @@ interface Volunteer {
   };
 }
 
-export default function VolunteersList() {
+export default function VolunteersList(): React.JSX.Element {
   const [volunteers, setVolunteers] = useState<Volunteer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -27,7 +26,7 @@ export default function VolunteersList() {
     fetchVolunteers();
   }, []);
 
-  const fetchVolunteers = async () => {
+  const fetchVolunteers = async (): Promise<void> => {
     try {
       const response = await fetch('/api/volunteers');
       if (!response.ok) {

@@ -13,7 +13,7 @@ interface Event {
   startTime: string;
   duration: number;
   requiredSkills: string[];
-  isActive: boolean;
+  status: string;
   meetingUrl?: string;
   zoomMeetingId?: string;
   maxVolunteers?: number;
@@ -23,7 +23,7 @@ interface Event {
   };
 }
 
-export default function EventsList() {
+export default function EventsList(): React.JSX.Element {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -34,7 +34,7 @@ export default function EventsList() {
     fetchEvents();
   }, []);
 
-  const fetchEvents = async () => {
+  const fetchEvents = async (): Promise<void> => {
     try {
       const response = await fetch('/api/events');
       if (!response.ok) {
@@ -50,7 +50,7 @@ export default function EventsList() {
     }
   };
 
-  const toggleEventStatus = async (eventId: string, currentStatus: string) => {
+  const toggleEventStatus = async (eventId: string, currentStatus: string): Promise<void> => {
     const newStatus = currentStatus === 'PUBLISHED' ? 'CANCELLED' : 'PUBLISHED';
     
     try {
@@ -79,7 +79,7 @@ export default function EventsList() {
     }
   };
 
-  const calculateMatches = async (eventId: string) => {
+  const calculateMatches = async (eventId: string): Promise<void> => {
     try {
       const response = await fetch(`/api/events/${eventId}/matches`, {
         method: 'POST',
@@ -108,7 +108,7 @@ export default function EventsList() {
     return true;
   });
 
-  const formatDateTime = (dateString: string) => {
+  const formatDateTime = (dateString: string): { date: string; time: string } => {
     const date = new Date(dateString);
     return {
       date: date.toLocaleDateString(),
@@ -116,7 +116,7 @@ export default function EventsList() {
     };
   };
 
-  const isUpcoming = (startTime: string) => {
+  const isUpcoming = (startTime: string): boolean => {
     return new Date(startTime) > new Date();
   };
 
@@ -172,7 +172,7 @@ export default function EventsList() {
             ].map(({ key, label, count }) => (
               <button
                 key={key}
-                onClick={() => setFilter(key as any)}
+                onClick={() => setFilter(key as 'all' | 'published' | 'draft' | 'cancelled')}
                 className={`px-3 py-1 text-sm rounded-full transition-colors ${
                   filter === key
                     ? 'bg-blue-100 text-blue-700 font-medium'

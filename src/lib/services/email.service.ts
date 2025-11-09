@@ -1,5 +1,5 @@
 import sgMail from '@sendgrid/mail';
-import type { Event, Volunteer, User } from '@prisma/client';
+import type { Event } from '@prisma/client';
 
 const API_KEY = process.env.SENDGRID_API_KEY || '';
 const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL || 'noreply@volunteerapp.com';
@@ -14,9 +14,9 @@ export class EmailService {
    * Send invitation email to volunteer for an event
    */
   public async sendEventInvitation(
-    volunteer: Volunteer & { user: User },
+    volunteer: { user: { id: string; name: string | null; email: string } },
     event: Event,
-    matchId: string
+    _matchId: string
   ): Promise<void> {
     if (!API_KEY) {
       console.warn('SendGrid API key not configured. Email not sent.');

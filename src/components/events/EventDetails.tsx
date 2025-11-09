@@ -32,7 +32,22 @@ interface EventDetailsProps {
   isAdmin?: boolean;
 }
 
-export default function EventDetails({ eventId, isAdmin = true }: EventDetailsProps) {
+interface Match {
+  id: string;
+  score: number;
+  status: string;
+  volunteer: {
+    id: string;
+    user: {
+      name: string | null;
+      email: string;
+    };
+    skills: string[];
+  };
+  emailSentAt?: string;
+}
+
+export default function EventDetails({ eventId, isAdmin = true }: EventDetailsProps): React.JSX.Element {
   const router = useRouter();
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
@@ -40,7 +55,7 @@ export default function EventDetails({ eventId, isAdmin = true }: EventDetailsPr
   const [calculating, setCalculating] = useState(false);
   const [creatingZoom, setCreatingZoom] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
-  const [matches, setMatches] = useState<any[]>([]);
+  const [matches, setMatches] = useState<Match[]>([]);
   const [showMatches, setShowMatches] = useState(false);
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
   const [sendingInvite, setSendingInvite] = useState<string | null>(null);
@@ -48,9 +63,10 @@ export default function EventDetails({ eventId, isAdmin = true }: EventDetailsPr
   useEffect(() => {
     fetchEvent();
     fetchMatches();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [eventId]);
 
-  const fetchEvent = async () => {
+  const fetchEvent = async (): Promise<void> => {
     try {
       const response = await fetch(`/api/events/${eventId}`);
       if (!response.ok) {
@@ -69,7 +85,7 @@ export default function EventDetails({ eventId, isAdmin = true }: EventDetailsPr
     }
   };
 
-  const fetchMatches = async () => {
+  const fetchMatches = async (): Promise<void> => {
     try {
       const response = await fetch(`/api/events/${eventId}/matches`);
       if (response.ok) {
@@ -84,7 +100,7 @@ export default function EventDetails({ eventId, isAdmin = true }: EventDetailsPr
     }
   };
 
-  const toggleEventStatus = async () => {
+  const toggleEventStatus = async (): Promise<void> => {
     if (!event) return;
 
     const newStatus = event.status === 'PUBLISHED' ? 'CANCELLED' : 'PUBLISHED';
@@ -111,7 +127,7 @@ export default function EventDetails({ eventId, isAdmin = true }: EventDetailsPr
     }
   };
 
-  const calculateMatches = async () => {
+  const calculateMatches = async (): Promise<void> => {
     setCalculating(true);
     try {
       const response = await fetch(`/api/events/${eventId}/matches`, {
@@ -145,7 +161,7 @@ export default function EventDetails({ eventId, isAdmin = true }: EventDetailsPr
     }
   };
 
-  const deleteEvent = async () => {
+  const deleteEvent = async (): Promise<void> => {
     if (!event) return;
 
     const confirmed = window.confirm(
@@ -171,7 +187,7 @@ export default function EventDetails({ eventId, isAdmin = true }: EventDetailsPr
     }
   };
 
-  const createZoomMeeting = async () => {
+  const createZoomMeeting = async (): Promise<void> => {
     setCreatingZoom(true);
     try {
       const response = await fetch(`/api/events/${eventId}/zoom`, {
@@ -195,7 +211,7 @@ export default function EventDetails({ eventId, isAdmin = true }: EventDetailsPr
     }
   };
 
-  const formatDateTime = (dateString: string) => {
+  const formatDateTime = (dateString: string): { date: string; time: string } => {
     const date = new Date(dateString);
     return {
       date: date.toLocaleDateString('en-US', { 
@@ -208,7 +224,7 @@ export default function EventDetails({ eventId, isAdmin = true }: EventDetailsPr
     };
   };
 
-  const sendInvitation = async (matchId: string, volunteerEmail: string) => {
+  const sendInvitation = async (matchId: string, _volunteerEmail: string): Promise<void> => {
     if (!event || event.status !== 'PUBLISHED') {
       setToast({ message: 'Event must be published to send invitations', type: 'error' });
       setTimeout(() => setToast(null), 3000);
@@ -244,7 +260,7 @@ export default function EventDetails({ eventId, isAdmin = true }: EventDetailsPr
     }
   };
 
-  const isUpcoming = (startTime: string) => {
+  const isUpcoming = (startTime: string): boolean => {
     return new Date(startTime) > new Date();
   };
 
@@ -294,7 +310,7 @@ export default function EventDetails({ eventId, isAdmin = true }: EventDetailsPr
   }
 
   if (!event) {
-    return null;
+    return <div>Event not found</div>;
   }
 
   const { date, time } = formatDateTime(event.startTime);
@@ -457,16 +473,16 @@ export default function EventDetails({ eventId, isAdmin = true }: EventDetailsPr
               )}
 
               {/* Registered Volunteers */}
-              {showMatches && matches.filter((m: any) => m.status === 'ACCEPTED').length > 0 && (
+              {showMatches && matches.filter((m: Match) => m.status === 'ACCEPTED').length > 0 && (
                 <div className="mb-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">Registered Volunteers</h3>
                   <div className="bg-white border border-gray-200 rounded-lg">
                     <div className="p-4 border-b border-gray-200 bg-green-50">
-                      <p className="text-sm text-gray-600">{matches.filter((m: any) => m.status === 'ACCEPTED').length} volunteer(s) registered</p>
+                      <p className="text-sm text-gray-600">{matches.filter((m: Match) => m.status === 'ACCEPTED').length} volunteer(s) registered</p>
                     </div>
                     <div className="max-h-96 overflow-y-auto">
                       <div className="divide-y divide-gray-200">
-                        {matches.filter((m: any) => m.status === 'ACCEPTED').map((match: any) => (
+                        {matches.filter((m: Match) => m.status === 'ACCEPTED').map((match: Match) => (
                           <div key={match.id} className="p-4 hover:bg-gray-50">
                             <div className="flex items-start space-x-3">
                               <div className="flex-shrink-0 h-10 w-10 bg-green-100 rounded-full flex items-center justify-center">
@@ -508,16 +524,16 @@ export default function EventDetails({ eventId, isAdmin = true }: EventDetailsPr
               )}
 
               {/* Potential Volunteers (Pending/Declined) - Admin Only */}
-              {isAdmin && showMatches && matches.filter((m: any) => m.status !== 'ACCEPTED').length > 0 && (
+              {isAdmin && showMatches && matches.filter((m: Match) => m.status !== 'ACCEPTED').length > 0 && (
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900 mb-3">Potential Volunteers</h3>
                   <div className="bg-white border border-gray-200 rounded-lg">
                     <div className="p-4 border-b border-gray-200 bg-gray-50">
-                      <p className="text-sm text-gray-600">{matches.filter((m: any) => m.status !== 'ACCEPTED').length} potential volunteer(s)</p>
+                      <p className="text-sm text-gray-600">{matches.filter((m: Match) => m.status !== 'ACCEPTED').length} potential volunteer(s)</p>
                     </div>
                     <div className="max-h-96 overflow-y-auto">
                       <div className="divide-y divide-gray-200">
-                        {matches.filter((m: any) => m.status !== 'ACCEPTED').map((match: any) => (
+                        {matches.filter((m: Match) => m.status !== 'ACCEPTED').map((match: Match) => (
                           <div key={match.id} className="p-4 hover:bg-gray-50">
                             <div className="flex items-start justify-between">
                               <div className="flex items-start space-x-3 flex-1">

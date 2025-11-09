@@ -38,7 +38,7 @@ const skillOptions = [
   'fundraising'
 ];
 
-export default function EventCreateForm() {
+export default function EventCreateForm(): React.JSX.Element {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -56,7 +56,7 @@ export default function EventCreateForm() {
     registrationDeadline: ''
   });
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
@@ -115,7 +115,7 @@ export default function EventCreateForm() {
         
         // Handle detailed validation errors
         if (errorData.details && Array.isArray(errorData.details)) {
-          const errorMessages = errorData.details.map((detail: any) => {
+          const errorMessages = errorData.details.map((detail: { path?: string[]; message: string }) => {
             const field = detail.path ? detail.path.join('.') : 'Unknown field';
             return `${field}: ${detail.message}`;
           });
@@ -137,7 +137,7 @@ export default function EventCreateForm() {
     }
   };
 
-  const handleSkillToggle = (skill: string) => {
+  const handleSkillToggle = (skill: string): void => {
     setFormData(prev => ({
       ...prev,
       requiredSkills: prev.requiredSkills.includes(skill)
@@ -146,7 +146,7 @@ export default function EventCreateForm() {
     }));
   };
 
-  const handleEventTypeChange = (type: EventType) => {
+  const handleEventTypeChange = (type: EventType): void => {
     setFormData(prev => ({
       ...prev,
       eventType: type,
@@ -156,7 +156,7 @@ export default function EventCreateForm() {
   };
 
   // Format datetime-local input value
-  const formatDateTimeLocal = (date: Date = new Date()) => {
+  const formatDateTimeLocal = (date: Date = new Date()): string => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
