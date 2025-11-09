@@ -25,6 +25,39 @@ export class EventMatchRepository extends BaseRepository {
   public constructor(prismaClient?: PrismaClient) {
     super(prismaClient);
   }
+
+  /**
+   * Find all matches
+   */
+  public async findAll(): Promise<EventMatchWithRelations[]> {
+    return this.prisma.eventMatch.findMany({
+      include: {
+        event: {
+          select: {
+            id: true,
+            title: true,
+            startTime: true,
+            eventType: true,
+          },
+        },
+        volunteer: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        matchedAt: 'desc',
+      },
+    }) as Promise<EventMatchWithRelations[]>;
+  }
+
   /**
    * Find all matches for an event
    */

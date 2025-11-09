@@ -145,12 +145,22 @@ export class VolunteerRepository extends BaseRepository {
   /**
    * Find volunteers by skills (for matching)
    */
-  public async findBySkills(skills: string[]): Promise<Volunteer[]> {
+  public async findBySkills(skills: string[]): Promise<VolunteerWithRelations[]> {
     return this.prisma.volunteer.findMany({
       where: {
         skills: {
           hasSome: skills,
         },
+      },
+      include: {
+        user: {
+          select: {
+            id: true,
+            email: true,
+            name: true,
+          },
+        },
+        matches: true,
       },
     });
   }

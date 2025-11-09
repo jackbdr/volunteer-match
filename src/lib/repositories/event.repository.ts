@@ -21,13 +21,13 @@ export class EventRepository extends BaseRepository {
   public async findAll(filters?: {
     type?: EventType;
     location?: string;
-    isActive?: boolean;
+    status?: string;
   }): Promise<EventWithRelations[]> {
     const where: Prisma.EventWhereInput = {};
     
     if (filters?.type) where.eventType = filters.type;
     if (filters?.location) where.location = { contains: filters.location, mode: 'insensitive' };
-    if (filters?.isActive !== undefined) where.isActive = filters.isActive;
+    if (filters?.status) where.status = filters.status as any;
 
     return this.prisma.event.findMany({
       where,
