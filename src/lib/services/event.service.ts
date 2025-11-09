@@ -1,20 +1,28 @@
-import { Event, UserRole, EventType } from '@prisma/client';
+import { Event, UserRole, EventType, EventStatus, MatchStatus } from '@prisma/client';
 import { EventRepository, CreateEventData, UpdateEventData } from '@/lib/repositories/event.repository';
+import { EventMatchRepository } from '@/lib/repositories/event-match.repository';
 import { ZoomService } from '@/lib/services/zoom.service';
-import { ForbiddenError, ValidationError } from '@/lib/errors';
+import { EmailService } from '@/lib/services/email.service';
+import { ForbiddenError, ValidationError, NotFoundError } from '@/lib/errors';
 import { createEventSchema } from '@/lib/validations/event';
 import type { AuthUser } from '@/lib/types/auth';
 
 export class EventService {
   private eventRepository: EventRepository;
+  private eventMatchRepository: EventMatchRepository;
   private zoomService: ZoomService;
+  private emailService: EmailService;
 
   public constructor(
     eventRepository: EventRepository = new EventRepository(),
+    eventMatchRepository: EventMatchRepository = new EventMatchRepository(),
     zoomService: ZoomService = new ZoomService(),
+    emailService: EmailService = new EmailService(),
   ) {
     this.eventRepository = eventRepository;
+    this.eventMatchRepository = eventMatchRepository;
     this.zoomService = zoomService;
+    this.emailService = emailService;
   }
 
   /**
@@ -37,7 +45,7 @@ export class EventService {
       startTime: new Date(validatedData.startTime),
       status: validatedData.status || 'DRAFT',
       meetingUrl: validatedData.meetingUrl || null,
-      zoomMeetingId: validatedData.zoomMeetingId || null,
+      zoomMeetingId: validatedData.zoomMeetingId ?? null,
       registrationDeadline: validatedData.registrationDeadline ? new Date(validatedData.registrationDeadline) : null,
       maxVolunteers: validatedData.maxVolunteers || null,
     };
@@ -61,7 +69,7 @@ export class EventService {
       ...validatedData,
       ...(validatedData.startTime && { startTime: new Date(validatedData.startTime) }),
       ...(validatedData.meetingUrl !== undefined && { meetingUrl: validatedData.meetingUrl || null }),
-      ...(validatedData.zoomMeetingId !== undefined && { zoomMeetingId: validatedData.zoomMeetingId || null }),
+      ...(validatedData.zoomMeetingId !== undefined && { zoomMeetingId: validatedData.zoomMeetingId ?? null }),
     };
 
     const updatedEvent = await this.eventRepository.update(id, updateData as UpdateEventData);
@@ -114,7 +122,7 @@ export class EventService {
 
     return this.eventRepository.update(event.id, {
       meetingUrl: meeting.join_url,
-      zoomMeetingId: meeting.id,
+      zoomMeetingId: BigInt(meeting.id),
     });
   }
 
@@ -148,6 +156,47 @@ export class EventService {
     }
 
     return this.eventRepository.findBySkills(volunteerSkills);
+  }
+
+  /**
+   * Send invitation email to a matched volunteer
+   * Admin only, event must be PUBLISHED
+   */
+  public async sendInvitation(
+    eventId: string,
+    matchId: string,
+    user: AuthUser
+  ): Promise<void> {
+    if (user.role !== UserRole.ADMIN) {
+      throw new ForbiddenError('Only administrators can send invitations');
+    }
+
+    const event = await this.eventRepository.findById(eventId);
+    
+    if (event.status !== EventStatus.PUBLISHED) {
+      throw new ValidationError('Can only send invitations for published events');
+    }
+
+    const match = await this.eventMatchRepository.findById(matchId);
+    
+    if (!match) {
+      throw new NotFoundError('Match not found');
+    }
+
+    if (match.eventId !== eventId) {
+      throw new ValidationError('Match does not belong to this event');
+    }
+
+    if (match.status !== MatchStatus.PENDING) {
+      throw new ValidationError('Can only send invitations to pending matches');
+    }
+
+    await this.emailService.sendEventInvitation(match.volunteer, event, match.id);
+
+    await this.eventMatchRepository.update(match.id, {
+      emailSentAt: new Date(),
+      notified: true,
+    });
   }
 }
 

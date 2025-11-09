@@ -1,14 +1,20 @@
-import { Volunteer, UserRole } from '@prisma/client';
+import { Volunteer, UserRole, MatchStatus, EventStatus } from '@prisma/client';
 import { VolunteerRepository, CreateVolunteerData, VolunteerWithRelations } from '@/lib/repositories/volunteer.repository';
+import { EventMatchRepository } from '@/lib/repositories/event-match.repository';
 import { ForbiddenError, ValidationError, NotFoundError } from '@/lib/errors';
 import { createVolunteerSchema } from '@/lib/validations/volunteer';
 import type { AuthUser } from '@/lib/types/auth';
 
 export class VolunteerService {
   private volunteerRepository: VolunteerRepository;
+  private eventMatchRepository: EventMatchRepository;
 
-  public constructor(volunteerRepository: VolunteerRepository = new VolunteerRepository()) {
+  public constructor(
+    volunteerRepository: VolunteerRepository = new VolunteerRepository(),
+    eventMatchRepository: EventMatchRepository = new EventMatchRepository()
+  ) {
     this.volunteerRepository = volunteerRepository;
+    this.eventMatchRepository = eventMatchRepository;
   }
 
   /**
@@ -102,6 +108,63 @@ export class VolunteerService {
     }
 
     return this.volunteerRepository.delete(volunteer.id);
+  }
+
+  /**
+   * Get pending invitations for current user
+   */
+  public async getPendingInvitations(user: AuthUser) {
+    const volunteer = await this.getCurrentUserProfile(user);
+
+    const invitations = await this.eventMatchRepository.findByVolunteerIdAndStatus(
+      volunteer.id,
+      MatchStatus.PENDING
+    );
+
+    return invitations.filter(inv => 
+      inv.event.status === EventStatus.PUBLISHED && 
+      inv.event.startTime >= new Date()
+    );
+  }
+
+  /**
+   * Get accepted matches (registered events) for current user
+   */
+  public async getAcceptedMatches(user: AuthUser) {
+    const volunteer = await this.getCurrentUserProfile(user);
+
+    const matches = await this.eventMatchRepository.findByVolunteerIdAndStatus(
+      volunteer.id,
+      MatchStatus.ACCEPTED
+    );
+
+    return matches.filter(match => 
+      match.event.status === EventStatus.PUBLISHED && 
+      match.event.startTime >= new Date()
+    );
+  }
+
+  /**
+   * Respond to an event invitation (accept/decline)
+   */
+  public async respondToInvitation(
+    user: AuthUser,
+    matchId: string,
+    action: 'accept' | 'decline'
+  ): Promise<void> {
+    const match = await this.eventMatchRepository.findById(matchId);
+    
+    if (!match) {
+      throw new NotFoundError('Invitation not found');
+    }
+
+    const volunteer = await this.volunteerRepository.findById(match.volunteerId);
+    if (volunteer.userId !== user.id) {
+      throw new ForbiddenError('You can only respond to your own invitations');
+    }
+
+    const newStatus = action === 'accept' ? MatchStatus.ACCEPTED : MatchStatus.DECLINED;
+    await this.eventMatchRepository.update(match.id, { status: newStatus });
   }
 
 }

@@ -60,7 +60,7 @@ export class ZoomService {
   /**
    * Get meeting details by ID
    */
-  public async getMeeting(meetingId: string): Promise<ZoomMeeting> {
+  public async getMeeting(meetingId: bigint): Promise<ZoomMeeting> {
     try {
       const response = await this.apiClient.get(`/meetings/${meetingId}`);
       return response.data;
@@ -75,7 +75,7 @@ export class ZoomService {
   /**
    * Update an existing Zoom meeting
    */
-  public async updateMeeting(meetingId: string, updates: ZoomMeetingUpdate): Promise<ZoomMeeting> {
+  public async updateMeeting(meetingId: bigint, updates: ZoomMeetingUpdate): Promise<ZoomMeeting> {
     try {
       await this.apiClient.patch(`/meetings/${meetingId}`, updates);
       return this.getMeeting(meetingId);
@@ -90,7 +90,7 @@ export class ZoomService {
   /**
    * Delete a Zoom meeting
    */
-  public async deleteMeeting(meetingId: string): Promise<void> {
+  public async deleteMeeting(meetingId: bigint): Promise<void> {
     try {
       await this.apiClient.delete(`/meetings/${meetingId}`);
     } catch (error) {
@@ -175,5 +175,4 @@ export class ZoomService {
   }
 }
 
-// Export singleton instance for use in application
 export const zoomService = new ZoomService();
