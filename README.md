@@ -1,36 +1,285 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Volunteer Match
 
-## Getting Started
+An intelligent volunteer management platform that matches volunteers with events based on their skills, availability, and preferences. Built with Next.js, TypeScript, Prisma, and PostgreSQL.
 
-First, run the development server:
+## 🌟 Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### For Administrators
+- **Event Management**: Create, publish, cancel, and complete volunteer events
+- **Smart Matching**: Calculate volunteer matches based on skills, availability, and location
+- **Zoom Integration**: Automatically create and manage Zoom meetings for virtual events
+- **Volunteer Invitations**: Send email invitations to matched volunteers via SendGrid
+- **Dashboard Analytics**: View volunteer counts, event statistics, and recent matches
+- **Draft System**: Save events as drafts before publishing
+
+### For Volunteers
+- **Personalized Dashboard**: View invitations and registered events
+- **Event Invitations**: Accept or decline event invitations
+- **Match Scores**: See how well you match with each event
+- **Event Details**: View comprehensive information about events you're invited to or registered for
+
+## 🏗️ Architecture
+
+### Layered Architecture
+The application follows a clean, layered architecture pattern:
+
+```
+├── Presentation Layer (React Components)
+│   └── User Interface & Interactions
+│
+├── API Routes (Next.js API Routes)
+│   └── Request/Response Handling
+│
+├── Service Layer
+│   ├── Business Logic
+│   ├── Validation (Zod Schemas)
+│   └── Orchestration
+│
+├── Repository Layer (Data Access)
+│   └── Database Operations (Prisma)
+│
+└── Database (PostgreSQL)
+    └── Data Persistence
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Key Architectural Decisions
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+#### 1. **Service Layer Pattern**
+- Business logic is centralized in service classes (`event.service.ts`, `volunteer.service.ts`, `matching.service.ts`, etc.)
+- Services orchestrate operations across multiple repositories
+- Ensures consistent business rules and makes testing easier
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+#### 2. **Repository Pattern**
+- Data access is abstracted through repository classes
+- Each entity has its own repository (e.g., `event.repository.ts`, `volunteer.repository.ts`)
+- Decouples business logic from database implementation
+- Makes it easier to swap databases or add caching
 
-## Learn More
+#### 3. **Validation at API Boundaries**
+- Zod schemas validate all incoming requests before reaching services
+- Located in `/src/lib/validations/`
+- Ensures type safety and data integrity
+- Provides clear error messages to clients
 
-To learn more about Next.js, take a look at the following resources:
+#### 4. **Authentication Middleware**
+- `withAuth` wrapper handles authentication and authorization
+- Role-based access control (ADMIN, VOLUNTEER)
+- Session management via NextAuth.js
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+#### 5. **Error Handling**
+- Custom error classes (`NotFoundError`, `ForbiddenError`, etc.)
+- Centralized error handling middleware
+- Consistent error responses across all endpoints
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+#### 6. **Type Safety**
+- Full TypeScript coverage
+- Prisma generates type-safe database clients
+- Shared types in `/src/types/` and `/src/lib/types/`
 
-## Deploy on Vercel
+#### 7. **BigInt Handling**
+- Zoom meeting IDs stored as BigInt in database
+- Serialization utilities handle BigInt → String conversion for JSON responses
+- Maintains precision while ensuring compatibility with JSON API
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 🚀 Live Demo
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+The application is deployed on Vercel: **[Your Vercel URL]**
+
+### Test Accounts
+
+#### Admin Account
+```
+Email: admin@volunteermatch.com
+Password: password123
+```
+
+**Admin Capabilities:**
+- Create and manage events
+- Calculate volunteer matches
+- Send invitations to volunteers
+- Create Zoom meetings for virtual events
+- View all volunteers and matches
+
+#### Volunteer Account
+```
+Email: john@example.com
+Password: password123
+```
+
+**Volunteer Capabilities:**
+- View pending invitations
+- Accept or decline event invitations
+- See match scores
+- View registered events
+
+#### Additional Volunteer Account
+```
+Email: jackbdr+volunteer1@icloud.com
+Password: password123
+```
+
+## 🛠️ Technology Stack
+
+### Frontend
+- **Next.js 15**: React framework with App Router
+- **TypeScript**: Type-safe JavaScript
+- **Tailwind CSS**: Utility-first CSS framework
+- **React Hook Form**: Form state management
+- **Zod**: Schema validation
+
+### Backend
+- **Next.js API Routes**: Serverless API endpoints
+- **NextAuth.js**: Authentication
+- **Prisma**: Type-safe ORM
+- **PostgreSQL**: Primary database
+- **bcrypt**: Password hashing
+
+### External Services
+- **Zoom API**: Virtual meeting integration
+- **SendGrid**: Email notifications
+- **Vercel**: Hosting and deployment
+
+## 📦 Local Development Setup
+
+### Prerequisites
+- Node.js 18+ 
+- PostgreSQL database
+- Zoom OAuth app (for meeting creation)
+- SendGrid account (for emails)
+
+### Installation
+
+1. **Clone the repository**
+```bash
+git clone <repository-url>
+cd volunteer-match
+```
+
+2. **Install dependencies**
+```bash
+npm install
+```
+
+3. **Set up environment variables**
+```bash
+cp .env.example .env.local
+```
+
+Edit `.env.local` with your configuration:
+```env
+# Database
+DATABASE_URL="postgresql://..."
+
+# NextAuth
+NEXTAUTH_URL="http://localhost:3000"
+NEXTAUTH_SECRET="your-secret-key"
+
+# Zoom OAuth
+ZOOM_ACCOUNT_ID="your-zoom-account-id"
+ZOOM_CLIENT_ID="your-zoom-client-id"
+ZOOM_CLIENT_SECRET="your-zoom-client-secret"
+
+# SendGrid
+SENDGRID_API_KEY="your-sendgrid-api-key"
+SENDGRID_FROM_EMAIL="noreply@yourdomain.com"
+SENDGRID_FROM_NAME="Volunteer Match"
+
+# App
+NEXT_PUBLIC_APP_URL="http://localhost:3000"
+```
+
+4. **Set up the database**
+```bash
+# Run migrations
+npx prisma migrate deploy
+
+# Seed the database
+npm run seed
+```
+
+5. **Run the development server**
+```bash
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser.
+
+## 📝 Database Schema
+
+### Core Entities
+- **User**: Authentication and profile information
+- **Volunteer**: Volunteer-specific data (skills, availability, preferences)
+- **Event**: Volunteer events with details and status
+- **EventMatch**: Matching records between volunteers and events with scores
+
+### Event Status Flow
+```
+DRAFT → PUBLISHED → COMPLETED
+           ↓
+       CANCELLED
+```
+
+### Match Status Flow
+```
+PENDING → ACCEPTED (volunteer registered)
+   ↓
+DECLINED (volunteer declined)
+```
+
+## 🧪 Available Scripts
+
+```bash
+# Development
+npm run dev          # Start dev server
+npm run build        # Build for production
+npm run start        # Start production server
+
+# Database
+npm run seed         # Seed database with test data
+npx prisma studio    # Open Prisma Studio (database GUI)
+npx prisma migrate dev  # Create new migration
+
+# Code Quality
+npm run lint         # Run ESLint
+npm run type-check   # Run TypeScript compiler check
+```
+
+## 🔮 Future Enhancements
+
+The following features are not implemented in the current MVP but are designed for future implementation:
+
+### Volunteer-Initiated Search
+- Allow volunteers to search and browse all published events
+- Filter by location, skills, date, and cause
+- Register for events without admin invitation
+
+### Batch Email Processing
+- Queue-based email system for sending bulk invitations
+- Non-blocking I/O for better performance
+- Email delivery tracking and retry logic
+
+### Enhanced Matching Algorithm
+- Machine learning-based match scoring
+- Consider volunteer history and feedback
+- Time-based availability matching (specific hours, not just time slots)
+
+### Reporting & Analytics
+- Event attendance tracking
+- Volunteer engagement metrics
+- Export capabilities for reports
+
+### Mobile Application
+- Native iOS/Android apps
+- Push notifications for new invitations
+- Quick event check-in
+
+### Multi-tenant Support
+- Support multiple organizations
+- Organization-specific branding
+- Separate volunteer pools per organization
+
+### API Documentation
+- OpenAPI/Swagger documentation for all endpoints
+- Interactive API explorer
+- Request/response examples
+- Authentication flow documentation
