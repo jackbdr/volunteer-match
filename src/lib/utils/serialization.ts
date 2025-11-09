@@ -30,3 +30,24 @@ export function serializeInvitations<T extends {
 }> {
   return invitations.map(serializeInvitation);
 }
+
+export function serializeMatch<T extends { 
+  event: { zoomMeetingId?: bigint | string | null };
+  [key: string]: unknown;
+}>(match: T): Omit<T, 'event'> & { 
+  event: Omit<T['event'], 'zoomMeetingId'> & { zoomMeetingId?: string | null };
+} {
+  return {
+    ...match,
+    event: serializeEvent(match.event),
+  };
+}
+
+export function serializeMatches<T extends { 
+  event: { zoomMeetingId?: bigint | string | null };
+  [key: string]: unknown;
+}>(matches: T[]): Array<Omit<T, 'event'> & { 
+  event: Omit<T['event'], 'zoomMeetingId'> & { zoomMeetingId?: string | null };
+}> {
+  return matches.map(serializeMatch);
+}

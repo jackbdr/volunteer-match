@@ -3,6 +3,7 @@ import { withAuth } from '@/lib/middleware/auth-handler';
 import { matchingService } from '@/lib/services/matching.service';
 import { EventMatchRepository } from '@/lib/repositories/event-match.repository';
 import { UserRole } from '@prisma/client';
+import { serializeMatches } from '@/lib/utils/serialization';
 
 const eventMatchRepository = new EventMatchRepository();
 
@@ -15,7 +16,7 @@ export const GET = withAuth(async (user, request: NextRequest, context: { params
   const params = await context.params;
   const matches = await eventMatchRepository.findByEventId(params.id);
   
-  return NextResponse.json(matches, { status: 200 });
+  return NextResponse.json(serializeMatches(matches), { status: 200 });
 }, UserRole.ADMIN);
 
 /**
