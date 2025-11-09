@@ -5,6 +5,9 @@ CREATE TYPE "UserRole" AS ENUM ('ADMIN', 'VOLUNTEER');
 CREATE TYPE "EventType" AS ENUM ('VIRTUAL', 'PHYSICAL');
 
 -- CreateEnum
+CREATE TYPE "EventStatus" AS ENUM ('DRAFT', 'PUBLISHED', 'CANCELLED', 'COMPLETED');
+
+-- CreateEnum
 CREATE TYPE "MatchStatus" AS ENUM ('PENDING', 'ACCEPTED', 'DECLINED');
 
 -- CreateTable
@@ -78,6 +81,7 @@ CREATE TABLE "Event" (
     "title" TEXT NOT NULL,
     "description" TEXT NOT NULL,
     "eventType" "EventType" NOT NULL,
+    "status" "EventStatus" NOT NULL DEFAULT 'DRAFT',
     "requiredSkills" TEXT[],
     "location" TEXT NOT NULL,
     "timeSlot" TEXT NOT NULL,
@@ -85,7 +89,6 @@ CREATE TABLE "Event" (
     "duration" INTEGER NOT NULL,
     "meetingUrl" TEXT,
     "zoomMeetingId" BIGINT,
-    "isActive" BOOLEAN NOT NULL DEFAULT true,
     "registrationDeadline" TIMESTAMP(3),
     "maxVolunteers" INTEGER,
     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,

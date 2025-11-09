@@ -17,6 +17,13 @@ enum EventType {
   PHYSICAL
 }
 
+enum EventStatus {
+  DRAFT
+  PUBLISHED
+  CANCELLED
+  COMPLETED
+}
+
 enum MatchStatus {
   PENDING
   ACCEPTED
@@ -97,6 +104,7 @@ model Event {
   title          String
   description    String
   eventType      EventType
+  status         EventStatus @default(DRAFT)
   requiredSkills String[]
   location       String
   timeSlot       String
@@ -106,7 +114,6 @@ model Event {
   meetingUrl    String?
   zoomMeetingId BigInt?
   
-  isActive              Boolean   @default(true)
   registrationDeadline  DateTime?
   maxVolunteers         Int?
   
