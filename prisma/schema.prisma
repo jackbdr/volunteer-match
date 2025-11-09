@@ -130,6 +130,7 @@ model EventMatch {
   score       Int
   status      MatchStatus @default(PENDING)
   notified    Boolean     @default(false)
+  emailSentAt DateTime?
   matchedAt   DateTime    @default(now())
 
   event     Event     @relation(fields: [eventId], references: [id], onDelete: Cascade)
