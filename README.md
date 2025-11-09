@@ -84,7 +84,7 @@ The application follows a clean, layered architecture pattern:
 
 ## 🚀 Live Demo
 
-The application is deployed on Vercel: **[Your Vercel URL]**
+The application is deployed on Vercel: **https://volunteer-match-gray.vercel.app**
 
 ### Test Accounts
 
