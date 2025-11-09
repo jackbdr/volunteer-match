@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { AuthUser } from '@/lib/types/auth';
+import { AuthUser } from '@/types/auth';
 import DashboardSidebar from './DashboardSidebar';
 import DashboardHeader from './DashboardHeader';
 

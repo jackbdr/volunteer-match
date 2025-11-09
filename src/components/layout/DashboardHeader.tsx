@@ -1,4 +1,4 @@
-import { AuthUser } from '@/lib/types/auth';
+import { AuthUser } from '@/types/auth';
 
 interface DashboardHeaderProps {
   user: AuthUser;

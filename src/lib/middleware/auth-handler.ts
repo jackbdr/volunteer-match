@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { UserRole } from '@prisma/client';
 import { getCurrentUser, requireAuth } from '@/lib/auth';
 import { withErrorHandler } from './error-handler';
-import type { AuthUser } from '@/lib/types/auth';
+import type { AuthUser } from '@/types/auth';
 
 /**
  * Wraps API route handlers with authentication

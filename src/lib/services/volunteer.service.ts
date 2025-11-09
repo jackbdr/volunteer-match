@@ -3,7 +3,8 @@ import { VolunteerRepository, CreateVolunteerData, VolunteerWithRelations } from
 import { EventMatchRepository, EventMatchWithRelations } from '@/lib/repositories/event-match.repository';
 import { ForbiddenError, ValidationError, NotFoundError } from '@/lib/errors';
 import { CreateVolunteerInput, UpdateVolunteerInput } from '@/lib/validations/volunteer';
-import type { AuthUser } from '@/lib/types/auth';
+import type { AuthUser } from '@/types/auth';
+import { InvitationAction } from '@/types/invitation';
 
 export class VolunteerService {
   private volunteerRepository: VolunteerRepository;
@@ -144,7 +145,7 @@ export class VolunteerService {
   public async respondToInvitation(
     user: AuthUser,
     matchId: string,
-    action: 'accept' | 'decline'
+    action: InvitationAction
   ): Promise<void> {
     const match = await this.eventMatchRepository.findById(matchId);
     
@@ -157,7 +158,7 @@ export class VolunteerService {
       throw new ForbiddenError('You can only respond to your own invitations');
     }
 
-    const newStatus = action === 'accept' ? MatchStatus.ACCEPTED : MatchStatus.DECLINED;
+    const newStatus = action === InvitationAction.ACCEPT ? MatchStatus.ACCEPTED : MatchStatus.DECLINED;
     await this.eventMatchRepository.update(match.id, { status: newStatus });
   }
 

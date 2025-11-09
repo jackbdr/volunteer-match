@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { AuthUser } from '@/lib/types/auth';
+import { AuthUser } from '@/types/auth';
 
 interface VolunteerProfile {
   id?: string;

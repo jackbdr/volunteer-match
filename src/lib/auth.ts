@@ -2,7 +2,7 @@ import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth-config';
 import { UserRole } from '@prisma/client';
 import { UnauthorizedError, ForbiddenError } from './errors';
-import type { AuthUser } from './types/auth';
+import type { AuthUser } from '@/types/auth';
 
 /**
  * Get the current authenticated user

@@ -2,8 +2,8 @@ import { EventMatch, MatchStatus } from '@prisma/client';
 import { EventMatchRepository, CreateEventMatchData, EventMatchWithRelations } from '@/lib/repositories/event-match.repository';
 import { EventRepository } from '@/lib/repositories/event.repository';
 import { VolunteerRepository } from '@/lib/repositories/volunteer.repository';
-import { ValidationError, ForbiddenError, NotFoundError } from '@/lib/errors';
-import type { AuthUser } from '@/lib/types/auth';
+import { ValidationError, ForbiddenError } from '@/lib/errors';
+import type { AuthUser } from '@/types/auth';
 
 export class MatchingService {
   private eventMatchRepository: EventMatchRepository;
@@ -163,25 +163,6 @@ export class MatchingService {
       matchesCreated,
     };
   }
-
-  /**
-   * Respond to a match invitation (accept or decline)
-   */
-  public async respondToMatch(user: AuthUser, matchId: string, action: 'accept' | 'decline'): Promise<EventMatch> {
-    const match = await this.eventMatchRepository.findById(matchId);
-    if (!match) {
-      throw new NotFoundError('Match not found');
-    }
-
-    const volunteer = await this.volunteerRepository.findById(match.volunteerId);
-    if (volunteer.userId !== user.id) {
-      throw new ForbiddenError('You can only respond to your own invitations');
-    }
-
-    const newStatus = action === 'accept' ? MatchStatus.ACCEPTED : MatchStatus.DECLINED;
-    return this.eventMatchRepository.update(matchId, { status: newStatus });
-  }
-
 }
 
 export const matchingService = new MatchingService();

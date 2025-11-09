@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAuth } from '@/lib/middleware/auth-handler';
 import { volunteerService } from '@/lib/services/volunteer.service';
 import { respondToInvitationSchema } from '@/lib/validations/match';
+import { InvitationAction } from '@/types/invitation';
 
 /**
  * POST /api/volunteers/me/invitations/[matchId]/respond
@@ -21,7 +22,7 @@ export const POST = withAuth(async (user, request: NextRequest, { params }: { pa
 
   return NextResponse.json(
     { 
-      message: validatedData.action === 'accept' 
+      message: validatedData.action === InvitationAction.ACCEPT 
         ? 'Successfully registered for event' 
         : 'Invitation declined' 
     },

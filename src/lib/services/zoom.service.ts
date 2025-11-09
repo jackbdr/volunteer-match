@@ -1,5 +1,5 @@
 import axios, { AxiosInstance } from 'axios';
-import { ZoomMeeting, ZoomMeetingRequest, ZoomMeetingUpdate, ZoomApiError } from '@/lib/types/zoom';
+import { ZoomMeeting, ZoomMeetingRequest, ZoomMeetingUpdate, ZoomApiError } from '@/types/zoom';
 import { ValidationError, NotFoundError } from '@/lib/errors';
 import { zoomTokenService } from './zoom-token.service';
 

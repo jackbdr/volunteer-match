@@ -5,7 +5,7 @@ import { ZoomService } from '@/lib/services/zoom.service';
 import { EmailService } from '@/lib/services/email.service';
 import { ForbiddenError, ValidationError, NotFoundError } from '@/lib/errors';
 import { CreateEventInput, UpdateEventInput } from '@/lib/validations/event';
-import type { AuthUser } from '@/lib/types/auth';
+import type { AuthUser } from '@/types/auth';
 
 export class EventService {
   private eventRepository: EventRepository;
@@ -41,7 +41,7 @@ export class EventService {
     const eventData: CreateEventData = {
       ...validatedData,
       startTime: new Date(validatedData.startTime),
-      status: validatedData.status || 'DRAFT',
+      status: validatedData.status || EventStatus.DRAFT,
       meetingUrl: validatedData.meetingUrl || null,
       zoomMeetingId: validatedData.zoomMeetingId ?? null,
       registrationDeadline: validatedData.registrationDeadline ? new Date(validatedData.registrationDeadline) : null,

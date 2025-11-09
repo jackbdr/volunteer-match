@@ -1,7 +1,7 @@
 'use client';
 
 import { UserRole } from '@prisma/client';
-import { AuthUser } from '@/lib/types/auth';
+import { AuthUser } from '@/types/auth';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
