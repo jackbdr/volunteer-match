@@ -82,6 +82,12 @@ The application follows a clean, layered architecture pattern:
 - Serialization utilities handle BigInt → String conversion for JSON responses
 - Maintains precision while ensuring compatibility with JSON API
 
+#### 8. **External Service Integration**
+- Zoom API calls for meeting creation/updates are currently synchronous
+- **Known Technical Debt**: Zoom meeting synchronization in event updates is blocking I/O
+- **Future Improvement**: Implement event-driven architecture (message queue/pub-sub) for non-blocking external API calls
+- This would improve performance, enable retry logic, and decouple business operations from third-party service availability
+
 ## 🚀 Live Demo
 
 The application is deployed on Vercel: **https://volunteer-match-gray.vercel.app**
@@ -258,10 +264,12 @@ The following features are not implemented in the current MVP but are designed f
 - Filter by location, skills, date, and cause
 - Register for events without admin invitation
 
-### Batch Email Processing
-- Queue-based email system for sending bulk invitations
-- Non-blocking I/O for better performance
-- Email delivery tracking and retry logic
+### Event-Driven Architecture for External Services
+- **Asynchronous Zoom Meeting Synchronization**: Implement message queue (e.g., RabbitMQ, AWS SQS, or Redis) to handle Zoom meeting creation/updates asynchronously
+- **Batch Email Processing**: Queue-based email system for sending bulk invitations
+- **Non-blocking I/O**: Decouple business operations from external API calls for better performance
+- **Retry Logic**: Automatic retries for failed external service calls
+- **Email Delivery Tracking**: Monitor delivery status and handle bounces
 
 ### Enhanced Matching Algorithm
 - Machine learning-based match scoring
