@@ -9,7 +9,7 @@ import { UserRole } from '@prisma/client';
  * Get Zoom meeting details
  * Admin only
  */
-export const GET = withAuth(async (user, request: NextRequest, context: { params: Promise<{ id: string }> }) => {
+export const GET = withAuth(async (user, request: NextRequest, context: { params: Promise<{ id: bigint }> }) => {
   const params = await context.params;
   const meeting = await zoomService.getMeeting(params.id);
 
@@ -21,7 +21,7 @@ export const GET = withAuth(async (user, request: NextRequest, context: { params
  * Update Zoom meeting
  * Admin only
  */
-export const PATCH = withAuth(async (user, request: NextRequest, context: { params: Promise<{ id: string }> }) => {
+export const PATCH = withAuth(async (user, request: NextRequest, context: { params: Promise<{ id: bigint }> }) => {
   const params = await context.params;
   const data = await request.json();
   const validatedData = updateZoomMeetingSchema.parse(data);
@@ -36,7 +36,7 @@ export const PATCH = withAuth(async (user, request: NextRequest, context: { para
  * Delete Zoom meeting
  * Admin only
  */
-export const DELETE = withAuth(async (user, request: NextRequest, context: { params: Promise<{ id: string }> }) => {
+export const DELETE = withAuth(async (user, request: NextRequest, context: { params: Promise<{ id: bigint }> }) => {
   const params = await context.params;
   
   await zoomService.deleteMeeting(params.id);

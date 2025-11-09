@@ -41,5 +41,5 @@ export const DELETE = withAuth(async (user, request: NextRequest, context: { par
   const params = await context.params;
   await eventService.deleteEvent(params.id, user);
 
-  return NextResponse.json({ success: true, message: 'Event deleted' }, { status: 204 });
+  return new NextResponse(null, { status: 204 });
 }, UserRole.ADMIN);
