@@ -8,6 +8,7 @@ interface EventFormData {
   title: string;
   description: string;
   eventType: EventType;
+  status: 'DRAFT' | 'PUBLISHED';
   requiredSkills: string[];
   location: string;
   startTime: string;
@@ -17,24 +18,24 @@ interface EventFormData {
 }
 
 const skillOptions = [
-  'Communication',
-  'Leadership',
-  'Organization',
-  'Teaching',
-  'Physical Labor',
-  'Technology',
-  'Customer Service',
-  'Problem Solving',
-  'Teamwork',
-  'Event Planning',
-  'Social Media',
-  'Writing',
-  'Design',
-  'Translation',
-  'Driving',
-  'Cooking',
-  'First Aid',
-  'Fundraising'
+  'communication',
+  'leadership',
+  'organization',
+  'teaching',
+  'physical labor',
+  'technology',
+  'customer service',
+  'problem solving',
+  'teamwork',
+  'event planning',
+  'social media',
+  'writing',
+  'design',
+  'translation',
+  'driving',
+  'cooking',
+  'first aid',
+  'fundraising'
 ];
 
 export default function EventCreateForm() {
@@ -46,6 +47,7 @@ export default function EventCreateForm() {
     title: '',
     description: '',
     eventType: 'PHYSICAL' as EventType,
+    status: 'PUBLISHED',
     requiredSkills: [],
     location: '',
     startTime: '',
@@ -200,7 +202,7 @@ export default function EventCreateForm() {
                 required
                 value={formData.title}
                 onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                 placeholder="e.g., Community Garden Cleanup"
               />
             </div>
@@ -215,7 +217,7 @@ export default function EventCreateForm() {
                 rows={4}
                 value={formData.description}
                 onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                 placeholder="Describe the event, what volunteers will do, and any important details..."
               />
             </div>
@@ -251,6 +253,42 @@ export default function EventCreateForm() {
                   <div className="text-lg mb-2">💻</div>
                   <div className="font-medium">Virtual</div>
                   <div className="text-sm text-gray-600">Zoom meeting auto-created</div>
+                </button>
+              </div>
+            </div>
+
+            {/* Status Selection */}
+            <div className="md:col-span-2">
+              <label className="block text-sm font-medium text-gray-700 mb-3">
+                Event Status *
+              </label>
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, status: 'PUBLISHED' }))}
+                  className={`p-4 border-2 rounded-lg text-center transition-colors ${
+                    formData.status === 'PUBLISHED'
+                      ? 'border-green-500 bg-green-50 text-green-700'
+                      : 'border-gray-300 hover:border-gray-400'
+                  }`}
+                >
+                  <div className="text-lg mb-2">✅</div>
+                  <div className="font-medium">Publish Now</div>
+                  <div className="text-sm text-gray-600">Event is live, volunteers can register</div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setFormData(prev => ({ ...prev, status: 'DRAFT' }))}
+                  className={`p-4 border-2 rounded-lg text-center transition-colors ${
+                    formData.status === 'DRAFT'
+                      ? 'border-yellow-500 bg-yellow-50 text-yellow-700'
+                      : 'border-gray-300 hover:border-gray-400'
+                  }`}
+                >
+                  <div className="text-lg mb-2">📝</div>
+                  <div className="font-medium">Save as Draft</div>
+                  <div className="text-sm text-gray-600">Not visible to volunteers yet</div>
                 </button>
               </div>
             </div>
@@ -293,7 +331,7 @@ export default function EventCreateForm() {
                 value={formData.startTime}
                 onChange={(e) => setFormData(prev => ({ ...prev, startTime: e.target.value }))}
                 min={formatDateTimeLocal(new Date())}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
               />
             </div>
 
@@ -305,7 +343,7 @@ export default function EventCreateForm() {
                 id="duration"
                 value={formData.duration}
                 onChange={(e) => setFormData(prev => ({ ...prev, duration: Number(e.target.value) }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
               >
                 <option value={30}>30 minutes</option>
                 <option value={60}>1 hour</option>
@@ -327,7 +365,7 @@ export default function EventCreateForm() {
                 value={formData.registrationDeadline}
                 onChange={(e) => setFormData(prev => ({ ...prev, registrationDeadline: e.target.value }))}
                 max={formData.startTime}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
               />
               <p className="text-sm text-gray-500 mt-1">Optional: When volunteer applications close</p>
             </div>
@@ -380,7 +418,7 @@ export default function EventCreateForm() {
                 min="1"
                 value={formData.maxVolunteers || ''}
                 onChange={(e) => setFormData(prev => ({ ...prev, maxVolunteers: e.target.value ? Number(e.target.value) : undefined }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                 placeholder="Leave empty for unlimited"
               />
               <p className="text-sm text-gray-500 mt-1">Optional: Limit the number of volunteers</p>

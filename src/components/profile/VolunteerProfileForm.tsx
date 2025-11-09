@@ -276,7 +276,7 @@ export default function VolunteerProfileForm({ user }: VolunteerProfileFormProps
                 id="location"
                 value={profile.location}
                 onChange={(e) => setProfile(prev => ({ ...prev, location: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                 placeholder="e.g., San Francisco, CA"
               />
               <p className="text-sm text-gray-500 mt-1">
@@ -293,7 +293,7 @@ export default function VolunteerProfileForm({ user }: VolunteerProfileFormProps
                 rows={4}
                 value={profile.bio}
                 onChange={(e) => setProfile(prev => ({ ...prev, bio: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-gray-900"
                 placeholder="Tell us about yourself, your interests, and what motivates you to volunteer..."
               />
               <p className="text-sm text-gray-500 mt-1">

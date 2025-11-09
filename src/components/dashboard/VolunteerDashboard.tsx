@@ -28,16 +28,15 @@ export default function VolunteerDashboard({ user }: VolunteerDashboardProps) {
 
   const fetchDashboardData = async () => {
     try {
-      const response = await fetch('/api/events');
+      const response = await fetch('/api/events?status=PUBLISHED');
       if (response.ok) {
         const events = await response.json();
-        const activeEvents = events.filter((e: any) => 
-          e.isActive && new Date(e.startTime) > new Date()
+        const upcomingEvents = events.filter((e: any) => 
+          new Date(e.startTime) > new Date()
         );
         
-        // For now, show all active events as recommendations
-        // TODO: Implement actual matching algorithm
-        const eventsWithScores = activeEvents.map((event: any) => ({
+        // For now, show all published upcoming events as recommendations
+        const eventsWithScores = upcomingEvents.map((event: any) => ({
           ...event,
           matchScore: Math.floor(Math.random() * 40) + 60
         }));

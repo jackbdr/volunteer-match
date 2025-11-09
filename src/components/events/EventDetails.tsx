@@ -10,11 +10,11 @@ interface Event {
   title: string;
   description: string;
   eventType: EventType;
+  status: 'DRAFT' | 'PUBLISHED' | 'CANCELLED' | 'COMPLETED';
   location: string;
   startTime: string;
   duration: number;
   requiredSkills: string[];
-  isActive: boolean;
   meetingUrl?: string;
   zoomMeetingId?: string;
   maxVolunteers?: number;
@@ -83,6 +83,8 @@ export default function EventDetails({ eventId }: EventDetailsProps) {
   const toggleEventStatus = async () => {
     if (!event) return;
 
+    const newStatus = event.status === 'PUBLISHED' ? 'CANCELLED' : 'PUBLISHED';
+
     try {
       const response = await fetch(`/api/events/${eventId}`, {
         method: 'PATCH',
@@ -90,7 +92,7 @@ export default function EventDetails({ eventId }: EventDetailsProps) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          isActive: !event.isActive,
+          status: newStatus,
         }),
       });
 
@@ -288,11 +290,15 @@ export default function EventDetails({ eventId }: EventDetailsProps) {
           
           <div className="flex items-center space-x-3">
             <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
-              event.isActive 
+              event.status === 'PUBLISHED' 
                 ? 'bg-green-100 text-green-800' 
-                : 'bg-gray-100 text-gray-800'
+                : event.status === 'CANCELLED'
+                ? 'bg-red-100 text-red-800'
+                : event.status === 'COMPLETED'
+                ? 'bg-gray-100 text-gray-800'
+                : 'bg-yellow-100 text-yellow-800'
             }`}>
-              {event.isActive ? 'Active' : 'Inactive'}
+              {event.status}
             </span>
             
             {upcoming && (
@@ -530,12 +536,12 @@ export default function EventDetails({ eventId }: EventDetailsProps) {
                 <button
                   onClick={toggleEventStatus}
                   className={`w-full px-4 py-2 rounded-lg transition-colors ${
-                    event.isActive
+                    event.status === 'PUBLISHED'
                       ? 'bg-red-600 text-white hover:bg-red-700'
                       : 'bg-green-600 text-white hover:bg-green-700'
                   }`}
                 >
-                  {event.isActive ? 'Deactivate Event' : 'Activate Event'}
+                  {event.status === 'PUBLISHED' ? 'Cancel Event' : 'Publish Event'}
                 </button>
 
                 <button
@@ -552,19 +558,19 @@ export default function EventDetails({ eventId }: EventDetailsProps) {
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-gray-500">Status:</span>
-                    <span className="font-medium">{event.isActive ? 'Active' : 'Inactive'}</span>
+                    <span className="font-medium text-gray-900">{event.status}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Type:</span>
-                    <span className="font-medium">{event.eventType}</span>
+                    <span className="font-medium text-gray-900">{event.eventType}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Matches:</span>
-                    <span className="font-medium">{event._count?.matches || 0}</span>
+                    <span className="font-medium text-gray-900">{event._count?.matches || 0}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Skills Required:</span>
-                    <span className="font-medium">{event.requiredSkills.length}</span>
+                    <span className="font-medium text-gray-900">{event.requiredSkills.length}</span>
                   </div>
                 </div>
               </div>

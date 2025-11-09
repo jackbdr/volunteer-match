@@ -26,7 +26,8 @@ export default function EventsList() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all');
+  const [filter, setFilter] = useState<'all' | 'published' | 'draft' | 'cancelled'>('all');
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   useEffect(() => {
     fetchEvents();
@@ -48,7 +49,9 @@ export default function EventsList() {
     }
   };
 
-  const toggleEventStatus = async (eventId: string, currentStatus: boolean) => {
+  const toggleEventStatus = async (eventId: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'PUBLISHED' ? 'CANCELLED' : 'PUBLISHED';
+    
     try {
       const response = await fetch(`/api/events/${eventId}`, {
         method: 'PATCH',
@@ -56,7 +59,7 @@ export default function EventsList() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          isActive: !currentStatus,
+          status: newStatus,
         }),
       });
 
@@ -66,9 +69,12 @@ export default function EventsList() {
 
       // Refresh events list
       fetchEvents();
+      setToast({ message: 'Event status updated successfully', type: 'success' });
+      setTimeout(() => setToast(null), 3000);
     } catch (error) {
       console.error('Error updating event status:', error);
-      alert('Failed to update event status');
+      setToast({ message: 'Failed to update event status', type: 'error' });
+      setTimeout(() => setToast(null), 3000);
     }
   };
 
@@ -82,18 +88,22 @@ export default function EventsList() {
         throw new Error('Failed to calculate matches');
       }
 
-      alert('Matches calculated successfully!');
+      const data = await response.json();
+      setToast({ message: `Successfully calculated ${data.matchCount || 0} matches!`, type: 'success' });
+      setTimeout(() => setToast(null), 3000);
       // Refresh the events list to show updated match counts
       fetchEvents();
     } catch (error) {
       console.error('Error calculating matches:', error);
-      alert('Failed to calculate matches');
+      setToast({ message: 'Failed to calculate matches', type: 'error' });
+      setTimeout(() => setToast(null), 3000);
     }
   };
 
   const filteredEvents = events.filter(event => {
-    if (filter === 'active') return event.isActive;
-    if (filter === 'inactive') return !event.isActive;
+    if (filter === 'published') return event.status === 'PUBLISHED';
+    if (filter === 'draft') return event.status === 'DRAFT';
+    if (filter === 'cancelled') return event.status === 'CANCELLED';
     return true;
   });
 
@@ -155,8 +165,9 @@ export default function EventsList() {
           <div className="flex space-x-2">
             {[
               { key: 'all', label: 'All Events', count: events.length },
-              { key: 'active', label: 'Active', count: events.filter(e => e.isActive).length },
-              { key: 'inactive', label: 'Inactive', count: events.filter(e => !e.isActive).length },
+              { key: 'published', label: 'Published', count: events.filter(e => e.status === 'PUBLISHED').length },
+              { key: 'draft', label: 'Draft', count: events.filter(e => e.status === 'DRAFT').length },
+              { key: 'cancelled', label: 'Cancelled', count: events.filter(e => e.status === 'CANCELLED').length },
             ].map(({ key, label, count }) => (
               <button
                 key={key}
@@ -221,11 +232,15 @@ export default function EventsList() {
                               {event.eventType === 'VIRTUAL' ? '💻 Virtual' : '📍 In-Person'}
                             </span>
                             <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                              event.isActive 
+                              event.status === 'PUBLISHED'
                                 ? 'bg-green-100 text-green-800' 
-                                : 'bg-gray-100 text-gray-800'
+                                : event.status === 'CANCELLED'
+                                ? 'bg-red-100 text-red-800'
+                                : event.status === 'COMPLETED'
+                                ? 'bg-gray-100 text-gray-800'
+                                : 'bg-yellow-100 text-yellow-800'
                             }`}>
-                              {event.isActive ? 'Active' : 'Inactive'}
+                              {event.status}
                             </span>
                             {upcoming && (
                               <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
@@ -313,14 +328,14 @@ export default function EventsList() {
                       </button>
                       
                       <button
-                        onClick={() => toggleEventStatus(event.id, event.isActive)}
+                        onClick={() => toggleEventStatus(event.id, event.status)}
                         className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                          event.isActive
+                          event.status === 'PUBLISHED'
                             ? 'bg-red-100 text-red-700 hover:bg-red-200'
                             : 'bg-green-100 text-green-700 hover:bg-green-200'
                         }`}
                       >
-                        {event.isActive ? 'Deactivate' : 'Activate'}
+                        {event.status === 'PUBLISHED' ? 'Cancel' : 'Publish'}
                       </button>
 
                       <Link
@@ -337,6 +352,15 @@ export default function EventsList() {
           </div>
         )}
       </div>
+      
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
+          toast.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+        }`}>
+          {toast.message}
+        </div>
+      )}
     </div>
   );
 }

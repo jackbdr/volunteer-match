@@ -43,9 +43,9 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
 
       if (eventsRes.ok) {
         const events = await eventsRes.json();
-        const activeEventsData = events.filter((e: any) => e.isActive);
+        const publishedEventsData = events.filter((e: any) => e.status === 'PUBLISHED');
         totalEvents = events.length;
-        activeEvents = activeEventsData.length;
+        activeEvents = publishedEventsData.length;
       }
 
       if (volunteersRes.ok) {
@@ -86,7 +86,7 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white rounded-lg p-6 border border-gray-200">
           <div className="flex items-center justify-between">
             <div>
@@ -133,32 +133,15 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
             </div>
           </div>
         </div>
-
-        <div className="bg-white rounded-lg p-6 border border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Zoom Status</p>
-              <p className="text-2xl font-bold text-green-600">Connected</p>
-            </div>
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
-            </div>
-          </div>
-          <p className="text-sm text-green-600 mt-2">
-            Auto-meetings enabled
-          </p>
-        </div>
       </div>
 
       {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 gap-6">
         {/* Quick Actions */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="space-y-6">
           <div className="bg-white rounded-lg border border-gray-200 p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h3>
-            <div className="space-y-3">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <Link
                 href="/dashboard/events/create"
                 className="block w-full text-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -166,35 +149,11 @@ export default function AdminDashboard({ user }: AdminDashboardProps) {
                 Create New Event
               </Link>
               <Link
-                href="/dashboard/matching"
-                className="block w-full text-center px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
-              >
-                Calculate Matches
-              </Link>
-              <Link
                 href="/dashboard/volunteers"
                 className="block w-full text-center px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
               >
                 View Volunteers
               </Link>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg border border-gray-200 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">System Health</h3>
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Database</span>
-                <span className="text-sm text-green-600 font-medium">Healthy</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Zoom API</span>
-                <span className="text-sm text-green-600 font-medium">Connected</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Email Service</span>
-                <span className="text-sm text-yellow-600 font-medium">Not configured</span>
-              </div>
             </div>
           </div>
         </div>

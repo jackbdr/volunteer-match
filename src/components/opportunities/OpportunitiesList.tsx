@@ -43,7 +43,8 @@ export default function OpportunitiesList() {
 
   const fetchOpportunities = async () => {
     try {
-      const response = await fetch('/api/events');
+      // Only fetch PUBLISHED events for volunteers
+      const response = await fetch('/api/events?status=PUBLISHED');
       if (!response.ok) {
         throw new Error('Failed to fetch opportunities');
       }
