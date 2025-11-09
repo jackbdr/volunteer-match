@@ -86,7 +86,11 @@ The application follows a clean, layered architecture pattern:
 
 The application is deployed on Vercel: **https://volunteer-match-gray.vercel.app**
 
+> **Note on Frontend Development**: This MVP prioritizes backend architecture, API design, and business logic implementation. The frontend is functional but basic. Features like user registration are not implemented in the UI - please use the pre-seeded test accounts below to explore the application. Future iterations would include a more polished UI/UX and complete user flows.
+
 ### Test Accounts
+
+**Important**: There is currently no sign-up functionality in the application. You must use one of the pre-seeded accounts below to sign in and explore the system.
 
 #### Admin Account
 ```
