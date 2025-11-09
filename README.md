@@ -28,11 +28,12 @@ The application follows a clean, layered architecture pattern:
 │   └── User Interface & Interactions
 │
 ├── API Routes (Next.js API Routes)
-│   └── Request/Response Handling
+│   ├── Request/Response Handling
+│   ├── Input Validation (Zod Schemas)
+│   └── Authentication & Authorization
 │
 ├── Service Layer
 │   ├── Business Logic
-│   ├── Validation (Zod Schemas)
 │   └── Orchestration
 │
 ├── Repository Layer (Data Access)
