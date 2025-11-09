@@ -20,17 +20,17 @@ export const GET = withAuth(async (user, request: NextRequest, context: { params
 
 /**
  * POST /api/events/[id]/matches
- * Get recommended volunteers for a specific event
+ * Calculate matches and save them to the database
  * Admin only
  */
 export const POST = withAuth(async (user, request: NextRequest, context: { params: Promise<{ id: string }> }) => {
   const params = await context.params;
-  const recommendations = await matchingService.getRecommendedVolunteers(params.id, user);
+  const result = await matchingService.calculateAndSaveMatches(params.id, user);
 
   return NextResponse.json({
     success: true,
     eventId: params.id,
-    recommendationCount: recommendations.length,
-    recommendations: recommendations.slice(0, 10),
+    matchesCreated: result.matchesCreated,
+    matchesFound: result.matchesFound,
   }, { status: 200 });
 }, UserRole.ADMIN);

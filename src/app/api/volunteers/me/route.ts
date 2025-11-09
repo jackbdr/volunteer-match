@@ -20,6 +20,7 @@ export const GET = withAuth(async (user) => {
 export const POST = withAuth(async (user, request: NextRequest) => {
   const data = await request.json();
   const volunteer = await volunteerService.createProfile(user, data);
+
   return NextResponse.json(volunteer, { status: 201 });
 });
 
@@ -31,5 +32,6 @@ export const POST = withAuth(async (user, request: NextRequest) => {
 export const PATCH = withAuth(async (user, request: NextRequest) => {
   const data = await request.json();
   const volunteer = await volunteerService.updateProfile(user, data);
+  
   return NextResponse.json(volunteer, { status: 200 });
 });
