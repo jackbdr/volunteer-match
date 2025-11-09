@@ -3,7 +3,7 @@ import { EventType } from '@prisma/client';
 export interface EventFilters {
   type?: EventType;
   location?: string;
-  isActive?: boolean;
+  status?: string;
 }
 
 /**
@@ -17,10 +17,7 @@ export function parseEventFilters(searchParams: URLSearchParams): EventFilters {
 
   const location = searchParams.get('location') || undefined;
   
-  const isActiveParam = searchParams.get('isActive');
-  const isActive = isActiveParam === 'true' ? true 
-                 : isActiveParam === 'false' ? false 
-                 : undefined;
+  const status = searchParams.get('status') || undefined;
 
-  return { type, location, isActive };
+  return { type, location, status };
 }

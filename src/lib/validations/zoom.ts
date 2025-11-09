@@ -6,7 +6,7 @@ import { z } from 'zod';
 
 export const createZoomMeetingSchema = z.object({
   topic: z.string().min(1, 'Meeting topic is required').max(200, 'Topic must be 200 characters or less'),
-  start_time: z.string().datetime().optional(),
+  start_time: z.iso.datetime().optional(),
   duration: z.number().int().min(1, 'Duration must be at least 1 minute').max(1440, 'Duration cannot exceed 24 hours').optional(),
   timezone: z.string().optional().default('UTC'),
   agenda: z.string().max(2000, 'Agenda must be 2000 characters or less').optional(),
@@ -27,7 +27,7 @@ export const createZoomMeetingSchema = z.object({
 
 export const updateZoomMeetingSchema = z.object({
   topic: z.string().min(1, 'Meeting topic is required').max(200, 'Topic must be 200 characters or less').optional(),
-  start_time: z.string().datetime().optional(),
+  start_time: z.iso.datetime().optional(),
   duration: z.number().int().min(1, 'Duration must be at least 1 minute').max(1440, 'Duration cannot exceed 24 hours').optional(),
   timezone: z.string().optional(),
   agenda: z.string().max(2000, 'Agenda must be 2000 characters or less').optional(),
