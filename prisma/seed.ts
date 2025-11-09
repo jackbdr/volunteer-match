@@ -127,6 +127,29 @@ async function main(): Promise<void> {
 
   console.log('👤 Created volunteer:', michael.email);
 
+  const jack = await prisma.user.create({
+    data: {
+      email: 'jackbdr+volunteer1@icloud.com',
+      name: 'Jack Robinson',
+      role: UserRole.VOLUNTEER,
+      password: await bcrypt.hash('password123', 10),
+      volunteer: {
+        create: {
+          skills: ['teaching', 'mentoring', 'public_speaking', 'teamwork'],
+          availability: ['saturday_morning', 'saturday_afternoon', 'sunday_morning'],
+          location: 'London',
+          preferredCauses: ['education', 'youth_development', 'community_health'],
+          bio: 'Passionate about making a difference through education and mentoring.',
+        },
+      },
+    },
+    include: {
+      volunteer: true,
+    },
+  });
+
+  console.log('👤 Created volunteer:', jack.email);
+
   // ============================================
   // CREATE EVENTS
   // ============================================
