@@ -84,7 +84,7 @@ The application follows a clean, layered architecture pattern:
 
 ## 🚀 Live Demo
 
-The application is deployed on Vercel: **[Your Vercel URL]**
+The application is deployed on Vercel: **https://volunteer-match-gray.vercel.app**
 
 ### Test Accounts
 
@@ -284,3 +284,9 @@ The following features are not implemented in the current MVP but are designed f
 - Interactive API explorer
 - Request/response examples
 - Authentication flow documentation
+
+### Comprehensive Testing Coverage
+- **Unit Tests**: Achieve 100% code coverage for all services, repositories, and utilities
+- **End-to-End Tests**: Playwright-based E2E tests for every API endpoint
+- **Integration Tests**: Test full flows from API to database
+- **Component Tests**: React component testing with user interaction scenarios
