@@ -70,25 +70,40 @@ export class EventService {
 
     const updatedEvent = await this.eventRepository.update(id, updateData as UpdateEventData);
 
-    // If updating a virtual event and it has a Zoom meeting, update the Zoom meeting too
-    if (updatedEvent.eventType === EventType.VIRTUAL && updatedEvent.zoomMeetingId) {
-      try {
-        const zoomUpdates: Record<string, unknown> = {};
-        
-        if (validatedData.title) zoomUpdates.topic = validatedData.title;
-        if (validatedData.description) zoomUpdates.agenda = validatedData.description;
-        if (validatedData.startTime) zoomUpdates.start_time = new Date(validatedData.startTime).toISOString();
-        if (validatedData.duration) zoomUpdates.duration = validatedData.duration;
-
-        if (Object.keys(zoomUpdates).length > 0) {
-          await this.zoomService.updateMeeting(updatedEvent.zoomMeetingId, zoomUpdates);
-        }
-      } catch (error) {
-        console.error('Failed to update Zoom meeting:', error);
-      }
-    }
+    await this.syncZoomMeetingIfNeeded(updatedEvent, validatedData);
 
     return updatedEvent;
+  }
+
+  /**
+   * Synchronize Zoom meeting details when event is updated
+   * 
+   * TODO: Refactor to use event-driven architecture (e.g., message queue/pub-sub)
+   * Currently this is a blocking I/O operation that couples event updates with Zoom API calls.
+   * Consider emitting an "EventUpdated" event that a separate service can consume asynchronously.
+   * This would improve performance, reliability (with retries), and separation of concerns.
+   */
+  private async syncZoomMeetingIfNeeded(event: Event, updates: UpdateEventInput): Promise<void> {
+    if (event.eventType !== EventType.VIRTUAL || !event.zoomMeetingId) {
+      return;
+    }
+
+    const zoomUpdates: Record<string, unknown> = {};
+    
+    if (updates.title) zoomUpdates.topic = updates.title;
+    if (updates.description) zoomUpdates.agenda = updates.description;
+    if (updates.startTime) zoomUpdates.start_time = new Date(updates.startTime).toISOString();
+    if (updates.duration) zoomUpdates.duration = updates.duration;
+
+    if (Object.keys(zoomUpdates).length === 0) {
+      return;
+    }
+
+    try {
+      await this.zoomService.updateMeeting(event.zoomMeetingId, zoomUpdates);
+    } catch (_error) {
+      // Silently fail - Zoom sync is not critical for event updates
+    }
   }
 
   /**
