@@ -19,6 +19,7 @@ interface Event {
   maxVolunteers?: number;
   _count?: {
     matches: number;
+    registeredVolunteers?: number;
   };
 }
 
@@ -89,7 +90,7 @@ export default function EventsList() {
       }
 
       const data = await response.json();
-      setToast({ message: `Successfully calculated ${data.matchCount || 0} matches!`, type: 'success' });
+      setToast({ message: `Successfully calculated ${data.matchesCreated || 0} matches!`, type: 'success' });
       setTimeout(() => setToast(null), 3000);
       // Refresh the events list to show updated match counts
       fetchEvents();
@@ -293,9 +294,15 @@ export default function EventsList() {
                         )}
                         
                         {event._count && (
-                          <div>
-                            <span className="text-gray-500 text-sm">Matches:</span>
-                            <div className="font-medium text-gray-900">{event._count.matches}</div>
+                          <div className="flex items-center space-x-4">
+                            <div>
+                              <span className="text-gray-500 text-sm">Matches:</span>
+                              <div className="font-medium text-gray-900">{event._count.matches}</div>
+                            </div>
+                            <div>
+                              <span className="text-gray-500 text-sm">Registered:</span>
+                              <div className="font-medium text-green-600">{event._count.registeredVolunteers || 0}</div>
+                            </div>
                           </div>
                         )}
                       </div>

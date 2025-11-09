@@ -23,14 +23,16 @@ interface Event {
   updatedAt: string;
   _count?: {
     matches: number;
+    registeredVolunteers?: number;
   };
 }
 
 interface EventDetailsProps {
   eventId: string;
+  isAdmin?: boolean;
 }
 
-export default function EventDetails({ eventId }: EventDetailsProps) {
+export default function EventDetails({ eventId, isAdmin = true }: EventDetailsProps) {
   const router = useRouter();
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
@@ -40,6 +42,8 @@ export default function EventDetails({ eventId }: EventDetailsProps) {
   const [successMessage, setSuccessMessage] = useState('');
   const [matches, setMatches] = useState<any[]>([]);
   const [showMatches, setShowMatches] = useState(false);
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const [sendingInvite, setSendingInvite] = useState<string | null>(null);
 
   useEffect(() => {
     fetchEvent();
@@ -100,7 +104,6 @@ export default function EventDetails({ eventId }: EventDetailsProps) {
         throw new Error('Failed to update event status');
       }
 
-      // Refresh event data
       fetchEvent();
     } catch (error) {
       console.error('Error updating event status:', error);
@@ -160,11 +163,11 @@ export default function EventDetails({ eventId }: EventDetailsProps) {
         throw new Error('Failed to delete event');
       }
 
-      alert('Event deleted successfully');
       router.push('/dashboard/events');
     } catch (error) {
       console.error('Error deleting event:', error);
-      alert('Failed to delete event');
+      setToast({ message: 'Failed to delete event', type: 'error' });
+      setTimeout(() => setToast(null), 3000);
     }
   };
 
@@ -203,6 +206,38 @@ export default function EventDetails({ eventId }: EventDetailsProps) {
       }),
       time: date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
+  };
+
+  const sendInvitation = async (matchId: string, volunteerEmail: string) => {
+    if (!event || event.status !== 'PUBLISHED') {
+      setToast({ message: 'Event must be published to send invitations', type: 'error' });
+      setTimeout(() => setToast(null), 3000);
+      return;
+    }
+
+    setSendingInvite(matchId);
+    try {
+      const response = await fetch(`/api/events/${eventId}/invite?matchId=${matchId}`, {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to send invitation');
+      }
+
+      const data = await response.json();
+      setToast({ message: data.message, type: 'success' });
+      setTimeout(() => setToast(null), 3000);
+      
+      fetchMatches();
+    } catch (error) {
+      console.error('Error sending invitation:', error);
+      setToast({ message: 'Failed to send invitation', type: 'error' });
+      setTimeout(() => setToast(null), 3000);
+    } finally {
+      setSendingInvite(null);
+    }
   };
 
   const isUpcoming = (startTime: string) => {
@@ -383,7 +418,7 @@ export default function EventDetails({ eventId }: EventDetailsProps) {
                           <p className="text-sm text-blue-600">Meeting ID: {event.zoomMeetingId}</p>
                         )}
                       </div>
-                    ) : (
+                    ) : isAdmin ? (
                       <div className="space-y-3">
                         <p className="text-blue-800">
                           <span className="font-medium">Status:</span> No Zoom meeting created yet
@@ -406,26 +441,32 @@ export default function EventDetails({ eventId }: EventDetailsProps) {
                           )}
                         </button>
                       </div>
+                    ) : (
+                      <div>
+                        <p className="text-blue-800">
+                          <span className="font-medium">Status:</span> Meeting details will be available closer to the event
+                        </p>
+                      </div>
                     )}
                   </div>
                 </div>
               )}
 
-              {/* Matched Volunteers */}
-              {showMatches && matches.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Matched Volunteers</h3>
+              {/* Registered Volunteers */}
+              {showMatches && matches.filter((m: any) => m.status === 'ACCEPTED').length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Registered Volunteers</h3>
                   <div className="bg-white border border-gray-200 rounded-lg">
-                    <div className="p-4 border-b border-gray-200 bg-gray-50">
-                      <p className="text-sm text-gray-600">{matches.length} volunteers matched</p>
+                    <div className="p-4 border-b border-gray-200 bg-green-50">
+                      <p className="text-sm text-gray-600">{matches.filter((m: any) => m.status === 'ACCEPTED').length} volunteer(s) registered</p>
                     </div>
                     <div className="max-h-96 overflow-y-auto">
                       <div className="divide-y divide-gray-200">
-                        {matches.map((match: any) => (
+                        {matches.filter((m: any) => m.status === 'ACCEPTED').map((match: any) => (
                           <div key={match.id} className="p-4 hover:bg-gray-50">
                             <div className="flex items-start space-x-3">
-                              <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
-                                <span className="text-blue-600 font-medium text-sm">
+                              <div className="flex-shrink-0 h-10 w-10 bg-green-100 rounded-full flex items-center justify-center">
+                                <span className="text-green-600 font-medium text-sm">
                                   {match.volunteer.user.name?.charAt(0) || match.volunteer.user.email.charAt(0).toUpperCase()}
                                 </span>
                               </div>
@@ -434,7 +475,9 @@ export default function EventDetails({ eventId }: EventDetailsProps) {
                                   <h4 className="text-sm font-medium text-gray-900 truncate">
                                     {match.volunteer.user.name || 'Unnamed Volunteer'}
                                   </h4>
-                                  <span className="text-xs font-medium text-green-600">{match.score}%</span>
+                                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                    ✓ Registered
+                                  </span>
                                 </div>
                                 <p className="text-xs text-gray-500 truncate">{match.volunteer.user.email}</p>
                                 <div className="mt-2 flex flex-wrap gap-1">
@@ -450,18 +493,87 @@ export default function EventDetails({ eventId }: EventDetailsProps) {
                                     <span className="text-xs text-gray-500">+{match.volunteer.skills.length - 3}</span>
                                   )}
                                 </div>
-                                <span
-                                  className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium mt-2 ${
-                                    match.status === 'ACCEPTED'
-                                      ? 'bg-green-100 text-green-800'
-                                      : match.status === 'DECLINED'
-                                      ? 'bg-red-100 text-red-800'
-                                      : 'bg-yellow-100 text-yellow-800'
-                                  }`}
-                                >
-                                  {match.status}
-                                </span>
                               </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Potential Volunteers (Pending/Declined) - Admin Only */}
+              {isAdmin && showMatches && matches.filter((m: any) => m.status !== 'ACCEPTED').length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-3">Potential Volunteers</h3>
+                  <div className="bg-white border border-gray-200 rounded-lg">
+                    <div className="p-4 border-b border-gray-200 bg-gray-50">
+                      <p className="text-sm text-gray-600">{matches.filter((m: any) => m.status !== 'ACCEPTED').length} potential volunteer(s)</p>
+                    </div>
+                    <div className="max-h-96 overflow-y-auto">
+                      <div className="divide-y divide-gray-200">
+                        {matches.filter((m: any) => m.status !== 'ACCEPTED').map((match: any) => (
+                          <div key={match.id} className="p-4 hover:bg-gray-50">
+                            <div className="flex items-start justify-between">
+                              <div className="flex items-start space-x-3 flex-1">
+                                <div className="flex-shrink-0 h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center">
+                                  <span className="text-blue-600 font-medium text-sm">
+                                    {match.volunteer.user.name?.charAt(0) || match.volunteer.user.email.charAt(0).toUpperCase()}
+                                  </span>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center justify-between">
+                                    <h4 className="text-sm font-medium text-gray-900 truncate">
+                                      {match.volunteer.user.name || 'Unnamed Volunteer'}
+                                    </h4>
+                                    <span className="text-xs font-medium text-green-600">{match.score}%</span>
+                                  </div>
+                                  <p className="text-xs text-gray-500 truncate">{match.volunteer.user.email}</p>
+                                  <div className="mt-2 flex flex-wrap gap-1">
+                                    {match.volunteer.skills.slice(0, 3).map((skill: string, idx: number) => (
+                                      <span
+                                        key={idx}
+                                        className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-gray-100 text-gray-700"
+                                      >
+                                        {skill}
+                                      </span>
+                                    ))}
+                                    {match.volunteer.skills.length > 3 && (
+                                      <span className="text-xs text-gray-500">+{match.volunteer.skills.length - 3}</span>
+                                    )}
+                                  </div>
+                                  <div className="mt-2 flex items-center gap-2">
+                                    <span
+                                      className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
+                                        match.status === 'ACCEPTED'
+                                          ? 'bg-green-100 text-green-800'
+                                          : match.status === 'DECLINED'
+                                          ? 'bg-red-100 text-red-800'
+                                          : 'bg-yellow-100 text-yellow-800'
+                                      }`}
+                                    >
+                                      {match.status}
+                                    </span>
+                                    {match.emailSentAt && (
+                                      <span className="text-xs text-gray-500">
+                                        ✓ Invited {new Date(match.emailSentAt).toLocaleDateString()}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                              
+                              {/* Send Invitation Button - Admin Only */}
+                              {isAdmin && match.status === 'PENDING' && event?.status === 'PUBLISHED' && (
+                                <button
+                                  onClick={() => sendInvitation(match.id, match.volunteer.user.email)}
+                                  disabled={sendingInvite === match.id}
+                                  className="ml-3 px-3 py-1.5 text-xs font-medium text-white bg-blue-600 hover:bg-blue-700 rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors whitespace-nowrap"
+                                >
+                                  {sendingInvite === match.id ? 'Sending...' : match.emailSentAt ? 'Resend' : 'Send Invite'}
+                                </button>
+                              )}
                             </div>
                           </div>
                         ))}
@@ -511,46 +623,48 @@ export default function EventDetails({ eventId }: EventDetailsProps) {
                 </div>
               </div>
 
-              {/* Actions */}
-              <div className="space-y-3">
-                <h3 className="text-lg font-semibold text-gray-900">Actions</h3>
-                
-                <button
-                  onClick={calculateMatches}
-                  disabled={calculating}
-                  className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {calculating ? (
-                    <span className="flex items-center justify-center">
-                      <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Calculating...
-                    </span>
-                  ) : (
-                    'Calculate Matches'
-                  )}
-                </button>
-                
-                <button
-                  onClick={toggleEventStatus}
-                  className={`w-full px-4 py-2 rounded-lg transition-colors ${
-                    event.status === 'PUBLISHED'
-                      ? 'bg-red-600 text-white hover:bg-red-700'
-                      : 'bg-green-600 text-white hover:bg-green-700'
-                  }`}
-                >
-                  {event.status === 'PUBLISHED' ? 'Cancel Event' : 'Publish Event'}
-                </button>
+              {/* Actions - Admin Only */}
+              {isAdmin && (
+                <div className="space-y-3">
+                  <h3 className="text-lg font-semibold text-gray-900">Actions</h3>
+                  
+                  <button
+                    onClick={calculateMatches}
+                    disabled={calculating}
+                    className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  >
+                    {calculating ? (
+                      <span className="flex items-center justify-center">
+                        <svg className="animate-spin -ml-1 mr-3 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Calculating...
+                      </span>
+                    ) : (
+                      'Calculate Matches'
+                    )}
+                  </button>
+                  
+                  <button
+                    onClick={toggleEventStatus}
+                    className={`w-full px-4 py-2 rounded-lg transition-colors ${
+                      event.status === 'PUBLISHED'
+                        ? 'bg-red-600 text-white hover:bg-red-700'
+                        : 'bg-green-600 text-white hover:bg-green-700'
+                    }`}
+                  >
+                    {event.status === 'PUBLISHED' ? 'Cancel Event' : 'Publish Event'}
+                  </button>
 
-                <button
-                  onClick={deleteEvent}
-                  className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                >
-                  Delete Event
-                </button>
-              </div>
+                  <button
+                    onClick={deleteEvent}
+                    className="w-full px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                  >
+                    Delete Event
+                  </button>
+                </div>
+              )}
 
               {/* Quick Stats */}
               <div className="bg-gray-50 rounded-lg p-4">
@@ -565,8 +679,13 @@ export default function EventDetails({ eventId }: EventDetailsProps) {
                     <span className="font-medium text-gray-900">{event.eventType}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-500">Matches:</span>
-                    <span className="font-medium text-gray-900">{event._count?.matches || 0}</span>
+                    <span className="text-gray-500">{isAdmin ? 'Matches:' : 'Registered:'}</span>
+                    <span className="font-medium text-gray-900">
+                      {isAdmin 
+                        ? (event._count?.matches || 0) 
+                        : (event._count?.registeredVolunteers || 0)
+                      }
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-500">Skills Required:</span>
@@ -578,6 +697,15 @@ export default function EventDetails({ eventId }: EventDetailsProps) {
           </div>
         </div>
       </div>
+      
+      {/* Toast Notification */}
+      {toast && (
+        <div className={`fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 ${
+          toast.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'
+        }`}>
+          {toast.message}
+        </div>
+      )}
     </div>
   );
 }

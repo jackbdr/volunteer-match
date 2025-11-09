@@ -41,18 +41,6 @@ const navItems: NavItem[] = [
     roles: ['VOLUNTEER']
   },
   {
-    name: 'Opportunities',
-    href: '/dashboard/opportunities',
-    icon: 'search',
-    roles: ['VOLUNTEER']
-  },
-  {
-    name: 'My Events',
-    href: '/dashboard/my-events',
-    icon: 'calendar-check',
-    roles: ['VOLUNTEER']
-  },
-  {
     name: 'Settings',
     href: '/dashboard/settings',
     icon: 'settings',
@@ -153,17 +141,7 @@ export default function DashboardSidebar({ user }: DashboardSidebarProps) {
               <span>Create Event</span>
             </Link>
           )}
-          {user.role === 'VOLUNTEER' && (
-            <Link
-              href="/dashboard/opportunities"
-              className="flex items-center space-x-2 px-3 py-2 text-sm text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-              <span>Find Events</span>
-            </Link>
-          )}
+
         </div>
       </div>
     </aside>

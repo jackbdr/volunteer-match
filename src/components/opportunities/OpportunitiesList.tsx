@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { EventType } from '@prisma/client';
 
 interface Opportunity {
@@ -22,6 +23,7 @@ interface Opportunity {
 }
 
 export default function OpportunitiesList() {
+  const router = useRouter();
   const [opportunities, setOpportunities] = useState<Opportunity[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -316,7 +318,11 @@ export default function OpportunitiesList() {
             const { date, time } = formatDateTime(opportunity.startTime);
             
             return (
-              <div key={opportunity.id} className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow">
+              <div 
+                key={opportunity.id} 
+                className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => router.push(`/dashboard/opportunities/${opportunity.id}`)}
+              >
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     {/* Header with Title and Match Score */}
@@ -414,11 +420,23 @@ export default function OpportunitiesList() {
                     )}
                   </div>
 
-                  {/* Apply Button */}
-                  <div className="ml-6">
+                  {/* Action Buttons */}
+                  <div className="ml-6 flex flex-col space-y-2">
                     <button
-                      onClick={() => applyToEvent(opportunity.id)}
-                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/dashboard/opportunities/${opportunity.id}`);
+                      }}
+                      className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors font-medium whitespace-nowrap"
+                    >
+                      View Details
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        applyToEvent(opportunity.id);
+                      }}
+                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium whitespace-nowrap"
                     >
                       Apply Now
                     </button>

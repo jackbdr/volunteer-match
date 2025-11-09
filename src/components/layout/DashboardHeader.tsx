@@ -21,19 +21,6 @@ export default function DashboardHeader({ user }: DashboardHeaderProps) {
 
           {/* User info and actions */}
           <div className="flex items-center space-x-4">
-            {/* Notifications - Future feature */}
-            <div className="relative">
-              <button 
-                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100 relative"
-                title="Notifications (Coming Soon)"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h4l-4-4v4zM12 9l3 3-3 3m-3-3h12" />
-                </svg>
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full text-xs"></span>
-              </button>
-            </div>
-
             {/* User profile dropdown */}
             <div className="flex items-center space-x-3">
               <div className="text-right">
