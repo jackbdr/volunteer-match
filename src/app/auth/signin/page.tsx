@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, JSX } from 'react';
+import { useState, JSX, Suspense } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function SignInPage(): JSX.Element {
+export const dynamic = 'force-dynamic';
+
+function SignInForm(): JSX.Element {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackUrl = searchParams.get('callbackUrl') || '/dashboard';
@@ -124,5 +126,20 @@ export default function SignInPage(): JSX.Element {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function SignInPage(): JSX.Element {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    }>
+      <SignInForm />
+    </Suspense>
   );
 }
