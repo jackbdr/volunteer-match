@@ -162,7 +162,7 @@ Password: password123
 
 1. **Clone the repository**
 ```bash
-git clone <repository-url>
+git clone https://github.com/jackbdr/volunteer-match
 cd volunteer-match
 ```
 
