@@ -267,8 +267,8 @@ The following features are not implemented in the current MVP but are designed f
 ### Event-Driven Architecture for External Services
 - **Asynchronous Zoom Meeting Synchronization**: Implement message queue (e.g., RabbitMQ, AWS SQS, or Redis) to handle Zoom meeting creation/updates asynchronously
 - **Batch Email Processing**: Queue-based email system for sending bulk invitations
-- **Non-blocking I/O**: Decouple business operations from external API calls for better performance
-- **Retry Logic**: Automatic retries for failed external service calls
+- **Decouple Request/Response from External API Calls**: Currently, HTTP requests wait for Zoom API and email operations to complete. Moving these to background jobs would improve response times and user experience
+- **Retry Logic**: Automatic retries for failed external service calls with exponential backoff
 - **Email Delivery Tracking**: Monitor delivery status and handle bounces
 
 ### Enhanced Matching Algorithm
